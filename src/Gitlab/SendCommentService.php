@@ -60,8 +60,8 @@ class SendCommentService
 
                 $note = sprintf('<table>
 <tr>
-<td>Crap&score:</td>
-<td style="font-weight: bold">%.2f%%</td>
+<td>Crap&nbsp;score:</td>
+<td style="font-weight: bold">%.2f</td>
 <td width="99%%"></td>
 </tr>
 </table>', $difference->getCrapScore());
@@ -74,9 +74,9 @@ class SendCommentService
 
                 $note = sprintf('<table>
 <tr>
-<td>Crap&score: </td>
-<td style="font-weight: bold">%.2f%%</td>
-<td style="%s">(<em>%+.2f%%</em>)</td>
+<td>Crap&nbsp;score: </td>
+<td style="font-weight: bold">%.2f</td>
+<td style="%s">(<em>%+.2f</em>)</td>
 <td width="99%%"></td>
 </tr>
 </table>', $difference->getCrapScore(), $style, $difference->getCrapDifference());

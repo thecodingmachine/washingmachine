@@ -65,7 +65,7 @@ class BuildService
     public function getLatestBuildFromBranch(string $projectName, string $branchName) : array
     {
         $commitId = $this->getLatestCommitIdFromBranch($projectName, $branchName);
-        $builds = $this->client->repositories->commitBuilds($projectName, $commitId);
+        $builds = $this->client->repositories->commitBuilds($projectName, $commitId, ['failed', 'success']);
 
         if (!empty($builds)) {
             // TODO: check that builds are ordered in reverse date order!!!
