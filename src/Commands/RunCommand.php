@@ -9,6 +9,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use TheCodingMachine\WashingMachine\Clover\CloverFile;
 use TheCodingMachine\WashingMachine\Clover\DiffService;
 use TheCodingMachine\WashingMachine\Gitlab\BuildService;
+use TheCodingMachine\WashingMachine\Gitlab\MergeRequestNotFoundException;
 use TheCodingMachine\WashingMachine\Gitlab\SendCommentService;
 
 class RunCommand extends Command
@@ -97,31 +98,38 @@ class RunCommand extends Command
 
         $buildService = new BuildService($client);
 
-        $mergeRequest = $buildService->findMergeRequestByBuildRef($projectName, $buildRef);
+        try {
+            $mergeRequest = $buildService->findMergeRequestByBuildRef($projectName, $buildRef);
+            $tmpFile = tempnam(sys_get_temp_dir(), 'art').'.zip';
 
-        //$build = $buildService->getLatestBuildFromBranch($mergeRequest['target_project_id'], $mergeRequest['target_branch']);
-        $tmpFile = tempnam(sys_get_temp_dir(), 'art').'.zip';
 
+            $buildService->dumpArtifactFromBranch($mergeRequest['target_project_id'], $mergeRequest['target_branch'], $tmpFile);
+            $zipFile = new \ZipArchive();
+            if ($zipFile->open($tmpFile)!==true) {
+                throw new \RuntimeException('Invalid ZIP archive '.$tmpFile);
+            }
+            $cloverFileString = $zipFile->getFromName('clover.xml');
 
-        $buildService->dumpArtifactFromBranch($mergeRequest['target_project_id'], $mergeRequest['target_branch'], $tmpFile);
-        $zipFile = new \ZipArchive();
-        if ($zipFile->open($tmpFile)!==true) {
-            throw new \RuntimeException('Unvalid ZIP archive '.$tmpFile);
+            $previousCloverFile = CloverFile::fromString($cloverFileString, getcwd());
+
+            //var_dump($previousCloverFile->getCoveragePercentage());exit;
+
+            //$artifactContent = $client->projects->buildArtifacts($mergeRequest['target_project_id'], $build['id']);
+            //file_put_contents('artifact.zip', $artifactContent);
+            //exit;
+            //var_dump($build);exit;
+
+            //var_dump($mergeRequest); exit;
+            $sendCommentService->sendCodeCoverageCommentToMergeRequest($cloverFile, $previousCloverFile, $projectName, $mergeRequest['id']);
+            $sendCommentService->sendDifferencesComments($cloverFile, $previousCloverFile, $projectName, $buildService->getCommitId($projectName, $buildRef));
+
+        } catch (MergeRequestNotFoundException $e) {
+            // If there is no merge request attached to this build, let's still make some comments on the commit itself!
+
+            // TODO
+            $output->writeln("It seems that this CI build is not part of a merge request. Skipping.");
         }
-        $cloverFileString = $zipFile->getFromName('clover.xml');
 
-        $previousCloverFile = CloverFile::fromString($cloverFileString, getcwd());
-
-        //var_dump($previousCloverFile->getCoveragePercentage());exit;
-
-        //$artifactContent = $client->projects->buildArtifacts($mergeRequest['target_project_id'], $build['id']);
-        //file_put_contents('artifact.zip', $artifactContent);
-        //exit;
-        //var_dump($build);exit;
-
-        //var_dump($mergeRequest); exit;
-        $sendCommentService->sendCodeCoverageComment($cloverFile, $previousCloverFile, $projectName, $mergeRequest['id']);
-        $sendCommentService->sendDifferencesComments($cloverFile, $previousCloverFile, $projectName, $buildService->getCommitId($projectName, $buildRef));
 
         // MR: target_branch
         // MR: target_project_id
@@ -134,6 +142,8 @@ class RunCommand extends Command
 }
 
 /*
+=================ENV IN A PR CONTEXT =========================
+
 CI_BUILD_TOKEN=xxxxxx
 HOSTNAME=runner-9431b96d-project-428-concurrent-0
 PHP_INI_DIR=/usr/local/etc/php
@@ -168,5 +178,44 @@ PHP_SHA256=300364d57fc4a6176ff7d52d390ee870ab6e30df121026649f8e7e0b9657fe93
 CI_SERVER=yes
 CI=true
 CI_BUILD_REPO=http://gitlab-ci-token:xxxxxx@git.thecodingmachine.com/tcm-projects/uneo.git
+PHP_VERSION=7.0.15
+
+===================ENV IN A COMMIT CONTEXT
+
+CI_BUILD_TOKEN=xxxxxx
+HOSTNAME=runner-9431b96d-project-447-concurrent-0
+PHP_INI_DIR=/usr/local/etc/php
+PHP_ASC_URL=https://secure.php.net/get/php-7.0.15.tar.xz.asc/from/this/mirror
+CI_BUILD_BEFORE_SHA=42dd9686eafc2e8fb0a6b4d2c6785baec229c94a
+CI_SERVER_VERSION=
+CI_BUILD_ID=192
+OLDPWD=/
+PHP_CFLAGS=-fstack-protector-strong -fpic -fpie -O2
+PHP_MD5=dca23412f3e3b3987e582091b751925d
+CI_PROJECT_ID=447
+GITLAB_API_TOKEN=xxxxxxxxxxxxxxchangedmanually
+PHPIZE_DEPS=autoconf 		file 		g++ 		gcc 		libc-dev 		make 		pkg-config 		re2c
+PHP_URL=https://secure.php.net/get/php-7.0.15.tar.xz/from/this/mirror
+CI_BUILD_REF_NAME=master
+CI_BUILD_REF=42dd9686eafc2e8fb0a6b4d2c6785baec229c94a
+PHP_LDFLAGS=-Wl,-O1 -Wl,--hash-style=both -pie
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+CI_BUILD_STAGE=test
+CI_PROJECT_DIR=/builds/dan/washing-test
+PHP_CPPFLAGS=-fstack-protector-strong -fpic -fpie -O2
+GPG_KEYS=1A4E8B7277C42E53DBA9C7B9BCAA30EA9C0D5763 6E4F6AB321FDC07F2C332E3AC2BF0BC433CFC8B3
+PWD=/builds/dan/washing-test
+CI_DEBUG_TRACE=false
+CI_SERVER_NAME=GitLab CI
+XDEBUG_VERSION=2.5.0
+GITLAB_CI=true
+CI_SERVER_REVISION=
+CI_BUILD_NAME=test
+HOME=/root
+SHLVL=1
+PHP_SHA256=300364d57fc4a6176ff7d52d390ee870ab6e30df121026649f8e7e0b9657fe93
+CI_SERVER=yes
+CI=true
+CI_BUILD_REPO=http://gitlab-ci-token:xxxxxx@git.thecodingmachine.com/dan/washing-test.git
 PHP_VERSION=7.0.15
 */

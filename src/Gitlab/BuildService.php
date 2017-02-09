@@ -36,6 +36,7 @@ class BuildService
      * @param string $projectName
      * @param string $buildRef
      * @return array The merge request object
+     * @throws MergeRequestNotFoundException
      */
     public function findMergeRequestByBuildRef(string $projectName, string $buildRef) : array
     {
@@ -52,7 +53,7 @@ class BuildService
             }
         }
 
-        throw new \RuntimeException('Could not find a PR (in the 50 last PRs) whose last commit ID is '.$commitId);
+        throw new MergeRequestNotFoundException('Could not find a PR (in the 50 last PRs) whose last commit/buildRef ID is '.$buildRef);
     }
 
     public function getLatestCommitIdFromBranch(string $projectName, string $branchName) : string

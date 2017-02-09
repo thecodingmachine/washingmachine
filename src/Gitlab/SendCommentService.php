@@ -22,7 +22,7 @@ class SendCommentService
         $this->diffService = $diffService;
     }
 
-    public function sendCodeCoverageComment(CloverFile $cloverFile, CloverFile $previousCloverFile, string $projectName, int $mergeRequestId)
+    public function sendCodeCoverageCommentToMergeRequest(CloverFile $cloverFile, CloverFile $previousCloverFile, string $projectName, int $mergeRequestId)
     {
         $coverage = $cloverFile->getCoveragePercentage();
         $previousCoverage = $previousCloverFile->getCoveragePercentage();
