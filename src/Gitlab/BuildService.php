@@ -62,9 +62,16 @@ class BuildService
         return $branch['commit']['id'];
     }
 
-    public function getLatestBuildFromBranch(string $projectName, string $branchName) : array
+    /**
+     * Recursive function that attempts to find a build in the previous commits.
+     *
+     * @param string $projectName
+     * @param string $commitId
+     * @param int $numIter
+     * @return array
+     */
+    private function getLatestBuildFromCommitId(string $projectName, string $commitId, int $numIter = 0) : array
     {
-        $commitId = $this->getLatestCommitIdFromBranch($projectName, $branchName);
         $builds = $this->client->repositories->commitBuilds($projectName, $commitId, ['failed', 'success']);
 
         if (!empty($builds)) {
@@ -72,7 +79,29 @@ class BuildService
             return $builds[0];
         }
 
-        throw new BuildNotFoundException('Could not find a build for branch '.$projectName.':'.$branchName);
+        $numIter++;
+        // Let's find a build in the last 10 commits.
+        if ($numIter > 10) {
+            throw new BuildNotFoundException('Could not find a build for branch '.$projectName.':'.$branchName);
+        }
+
+        // Let's get the commit info
+        $commit = $this->client->repositories->commit($projectName, $commitId);
+        $parentIds = $commit['parent_ids'];
+
+        if (count($parentIds) !== 1) {
+            throw new BuildNotFoundException('Could not find a build for branch '.$projectName.':'.$branchName);
+        }
+
+        // Not found? Let's recurse.
+        return $this->getLatestBuildFromCommitId($projectName, $parentIds[0], $numIter);
+    }
+
+    public function getLatestBuildFromBranch(string $projectName, string $branchName) : array
+    {
+        $commitId = $this->getLatestCommitIdFromBranch($projectName, $branchName);
+
+        return $this->getLatestBuildFromCommitId($projectName, $commitId);
     }
 
     public function dumpArtifact(string $projectName, string $buildRef, string $file)
