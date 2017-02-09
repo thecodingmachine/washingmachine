@@ -121,7 +121,7 @@ class RunCommand extends Command
 
             //var_dump($mergeRequest); exit;
             $sendCommentService->sendCodeCoverageCommentToMergeRequest($cloverFile, $previousCloverFile, $projectName, $mergeRequest['id']);
-            $sendCommentService->sendDifferencesComments($cloverFile, $previousCloverFile, $projectName, $buildService->getCommitId($projectName, $buildRef));
+            $sendCommentService->sendDifferencesComments($cloverFile, $previousCloverFile, $projectName, $buildRef /*$buildService->getCommitId($projectName, $buildRef)*/);
 
         } catch (MergeRequestNotFoundException $e) {
             // If there is no merge request attached to this build, let's still make some comments on the commit itself!
