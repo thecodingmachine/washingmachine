@@ -126,7 +126,9 @@ class RunCommand extends Command
             // TODO: move getenv to something testable!!!
             $lastCommitBuild = $buildService->getLatestBuildFromBranch($projectName, getenv('CI_BUILD_REF_NAME'));
             $lastCommitCloverFile = $this->getCloverFileFromBranch($buildService, $mergeRequest['target_project_id'], getenv('CI_BUILD_REF_NAME'));
-            $sendCommentService->sendDifferencesComments($cloverFile, $lastCommitCloverFile, $projectName, $lastCommitBuild['id'] /*$buildService->getCommitId($projectName, $buildRef)*/);
+            var_dump("Last commit ID build");
+            var_dump($lastCommitBuild['id']);
+            $sendCommentService->sendDifferencesComments($cloverFile, $lastCommitCloverFile, $projectName, $buildRef /*$lastCommitBuild['id']*/ /*$buildService->getCommitId($projectName, $buildRef)*/);
         } catch (BuildNotFoundException $e) {
             $output->writeln('Unable to find a previous build for this branch. '.$e->getMessage());
         }

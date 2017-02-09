@@ -69,6 +69,7 @@ class BuildService
      * @param string $commitId
      * @param int $numIter
      * @return array
+     * @throws BuildNotFoundException
      */
     private function getLatestBuildFromCommitId(string $projectName, string $commitId, int $numIter = 0) : array
     {
@@ -97,6 +98,12 @@ class BuildService
         return $this->getLatestBuildFromCommitId($projectName, $parentIds[0], $numIter);
     }
 
+    /**
+     * @param string $projectName
+     * @param string $branchName
+     * @return array
+     * @throws BuildNotFoundException
+     */
     public function getLatestBuildFromBranch(string $projectName, string $branchName) : array
     {
         $commitId = $this->getLatestCommitIdFromBranch($projectName, $branchName);
