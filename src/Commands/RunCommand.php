@@ -7,6 +7,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use TheCodingMachine\WashingMachine\Clover\CloverFile;
+use TheCodingMachine\WashingMachine\Clover\DiffService;
 use TheCodingMachine\WashingMachine\Gitlab\BuildService;
 use TheCodingMachine\WashingMachine\Gitlab\SendCommentService;
 
@@ -110,7 +111,9 @@ class RunCommand extends Command
         $client = new Client($gitlabUrl);
         $client->authenticate($gitlabApiToken);
 
-        $sendCommentService = new SendCommentService($client);
+        $diffService = new DiffService(1, 20);
+
+        $sendCommentService = new SendCommentService($client, $diffService);
 
         // From CI_BUILD_REF, we can get the commit ( -> project -> build -> commit )
         // From the merge_requests API, we can get the list of commits for a single merge request
@@ -153,11 +156,6 @@ class RunCommand extends Command
         //var_dump($buildService->getCommitId($projectName, $buildRef));exit;
         //var_dump($buildService->findMergeRequestByBuildRef($projectName, $buildRef));exit;
 
-        // TODO: put all these params in an object.
-        /*var_dump($client->projects->build($projectName, $buildRef));exit;
-        $mrs = $client->merge_requests->all($projectName, 1, 50, 'updated_at', 'desc');
-        var_dump($mrs);
-        var_dump($client->merge_requests->commits($projectName, $mrs[0]['id']));*/
 
     }
 }
