@@ -72,7 +72,7 @@ class BuildService
             return $builds[0];
         }
 
-        throw new \RuntimeException('Could not find a build for branch '.$projectName.':'.$branchName);
+        throw new BuildNotFoundException('Could not find a build for branch '.$projectName.':'.$branchName);
     }
 
     public function dumpArtifact(string $projectName, string $buildRef, string $file)

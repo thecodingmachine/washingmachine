@@ -8,6 +8,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use TheCodingMachine\WashingMachine\Clover\CloverFile;
 use TheCodingMachine\WashingMachine\Clover\DiffService;
+use TheCodingMachine\WashingMachine\Gitlab\BuildNotFoundException;
 use TheCodingMachine\WashingMachine\Gitlab\BuildService;
 use TheCodingMachine\WashingMachine\Gitlab\MergeRequestNotFoundException;
 use TheCodingMachine\WashingMachine\Gitlab\SendCommentService;
@@ -100,17 +101,9 @@ class RunCommand extends Command
 
         try {
             $mergeRequest = $buildService->findMergeRequestByBuildRef($projectName, $buildRef);
-            $tmpFile = tempnam(sys_get_temp_dir(), 'art').'.zip';
 
 
-            $buildService->dumpArtifactFromBranch($mergeRequest['target_project_id'], $mergeRequest['target_branch'], $tmpFile);
-            $zipFile = new \ZipArchive();
-            if ($zipFile->open($tmpFile)!==true) {
-                throw new \RuntimeException('Invalid ZIP archive '.$tmpFile);
-            }
-            $cloverFileString = $zipFile->getFromName('clover.xml');
-
-            $previousCloverFile = CloverFile::fromString($cloverFileString, getcwd());
+            $previousCloverFile = $this->getCloverFileFromBranch($buildService, $mergeRequest['target_project_id'], $mergeRequest['target_branch']);
 
             //var_dump($previousCloverFile->getCoveragePercentage());exit;
 
@@ -121,14 +114,23 @@ class RunCommand extends Command
 
             //var_dump($mergeRequest); exit;
             $sendCommentService->sendCodeCoverageCommentToMergeRequest($cloverFile, $previousCloverFile, $projectName, $mergeRequest['id']);
-            $sendCommentService->sendDifferencesComments($cloverFile, $previousCloverFile, $projectName, $buildRef /*$buildService->getCommitId($projectName, $buildRef)*/);
 
         } catch (MergeRequestNotFoundException $e) {
             // If there is no merge request attached to this build, let's still make some comments on the commit itself!
 
             // TODO
-            $output->writeln("It seems that this CI build is not part of a merge request. Skipping.");
+            $output->writeln('It seems that this CI build is not part of a merge request. Skipping.');
         }
+
+        try {
+            // TODO: move getenv to something testable!!!
+            $lastCommitBuild = $buildService->getLatestBuildFromBranch($projectName, getenv('CI_BUILD_REF_NAME'));
+            $lastCommitCloverFile = $this->getCloverFileFromBranch($buildService, $mergeRequest['target_project_id'], $mergeRequest['target_branch']);
+            $sendCommentService->sendDifferencesComments($cloverFile, $lastCommitCloverFile, $projectName, $lastCommitBuild['id'] /*$buildService->getCommitId($projectName, $buildRef)*/);
+        } catch (BuildNotFoundException $e) {
+            $output->writeln('Unable to find a previous build for this branch. '.$e->getMessage());
+        }
+
 
 
         // MR: target_branch
@@ -138,6 +140,21 @@ class RunCommand extends Command
         //var_dump($buildService->findMergeRequestByBuildRef($projectName, $buildRef));exit;
 
 
+    }
+
+    public function getCloverFileFromBranch(BuildService $buildService, string $projectName, string $targetBranch) : CloverFile
+    {
+        $tmpFile = tempnam(sys_get_temp_dir(), 'art').'.zip';
+
+        $buildService->dumpArtifactFromBranch($projectName, $targetBranch, $tmpFile);
+        $zipFile = new \ZipArchive();
+        if ($zipFile->open($tmpFile)!==true) {
+            throw new \RuntimeException('Invalid ZIP archive '.$tmpFile);
+        }
+        $cloverFileString = $zipFile->getFromName('clover.xml');
+
+        $cloverFile = CloverFile::fromString($cloverFileString, getcwd());
+        return $cloverFile;
     }
 }
 

@@ -82,7 +82,8 @@ class SendCommentService
 </table>', $difference->getCrapScore(), $style, $difference->getCrapDifference());
 
             }
-
+var_dump($difference->getFile());
+            var_dump($difference->getLine());
             $this->client->repositories->createCommitComment($projectName, $commitId, $note, [
                 'path' => $difference->getFile(),
                 'line' => $difference->getLine(),
