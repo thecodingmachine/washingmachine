@@ -20,7 +20,7 @@ $container = new \Mouf\Picotainer\Picotainer([
         return new RunCommand();
     },
     Application::class => function(ContainerInterface $container) {
-        $app = new Application('washing-machine');
+        $app = new Application('washingmachine');
         $app->add($container->get(RunCommand::class));
         return $app;
     }

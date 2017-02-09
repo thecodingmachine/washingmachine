@@ -13,6 +13,7 @@ use TheCodingMachine\WashingMachine\Gitlab\SendCommentService;
 
 class RunCommand extends Command
 {
+
     protected function configure()
     {
         $this
@@ -27,7 +28,7 @@ class RunCommand extends Command
             ->addOption('gitlab-url',
                 'u',
                 InputOption::VALUE_REQUIRED,
-                'The Gitlab URL. If not specified, it is deduced from the CI_PROJECT_URL environment variable.',
+                'The Gitlab URL. If not specified, it is deduced from the CI_BUILD_REPO environment variable.',
                 null)
             ->addOption('gitlab-api-token',
                 't',
@@ -54,32 +55,18 @@ class RunCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $cloverFilePath = $input->getOption('clover');
+        $config = new Config($input);
+
+        $cloverFilePath = $config->getCloverFilePath();
 
         $cloverFile = CloverFile::fromFile($cloverFilePath, getcwd());
         $output->writeln(sprintf('Code coverage: %.2f%%', $cloverFile->getCoveragePercentage()*100));
 
-        $gitlabApiToken = $input->getOption('gitlab-api-token');
-        if ($gitlabApiToken === null) {
-            $gitlabApiToken = getenv('GITLAB_API_TOKEN');
-            if ($gitlabApiToken === false) {
-                throw new \RuntimeException('Could not find the Gitlab API token in the "GITLAB_API_TOKEN" environment variable. Either set this environment variable or pass the token via the --gitlab-api-token command line option.');
-            }
-        }
+        $gitlabApiToken = $config->getGitlabApiToken();
 
-        $gitlabUrl = $input->getOption('gitlab-url');
-        if ($gitlabUrl === null) {
-            $ciProjectUrl = getenv('CI_BUILD_REPO');
-            if ($ciProjectUrl === false) {
-                throw new \RuntimeException('Could not find the Gitlab URL in the "CI_BUILD_REPO" environment variable (usually set by Gitlab CI). Either set this environment variable or pass the URL via the --gitlab-url command line option.');
-            }
-            $parsed_url =  $ciProjectUrl;
-            $scheme   = isset($parsed_url['scheme']) ? $parsed_url['scheme'] . '://' : '';
-            $host     = isset($parsed_url['host']) ? $parsed_url['host'] : '';
-            $port     = isset($parsed_url['port']) ? ':' . $parsed_url['port'] : '';
-            $gitlabUrl = $scheme.$host.$port;
-        }
-        $gitlabUrl = trim($gitlabUrl, '/').'/api/v3/';
+        $gitlabUrl = $config->getGitlabUrl();
+
+
 
         /*$projectId = $input->getOption('gitlab-project-id');
         if ($projectId === null) {
@@ -89,23 +76,9 @@ class RunCommand extends Command
             }
         }*/
 
-        $projectName = $input->getOption('gitlab-project-name');
-        if ($projectName === null) {
-            $projectDir = getenv('CI_PROJECT_DIR');
-            if ($projectDir === false) {
-                throw new \RuntimeException('Could not find the Gitlab project name in the "CI_PROJECT_DIR" environment variable (usually set by Gitlab CI). Either set this environment variable or pass the project name via the --gitlab-project-name command line option.');
-            }
-            $projectName = substr($projectDir, 8);
-        }
+        $projectName = $config->getGitlabProjectName();
 
-        $buildRef = $input->getOption('gitlab-build-ref');
-        if ($buildRef === null) {
-            $buildRef = getenv('CI_BUILD_REF');
-            if ($buildRef === false) {
-                throw new \RuntimeException('Could not find the Gitlab build reference in the "CI_BUILD_REF" environment variable (usually set by Gitlab CI). Either set this environment variable or pass the build reference via the --gitlab-build-ref command line option.');
-            }
-        }
-
+        $buildRef = $config->getGitlabBuildRef();
 
 
         $client = new Client($gitlabUrl);
