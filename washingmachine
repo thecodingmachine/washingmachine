@@ -4,7 +4,14 @@ use TheCodingMachine\WashingMachine\Commands\RunCommand;
 use Symfony\Component\Console\Application;
 use Interop\Container\ContainerInterface;
 
-require __DIR__.'/vendor/autoload.php';
+if (file_exists(__DIR__.'/vendor/autoload.php')) {
+    require __DIR__.'/vendor/autoload.php';
+} elseif (file_exists(__DIR__.'/../../../vendor/autoload.php')) {
+    require __DIR__.'/../../../vendor/autoload.php';
+} else {
+    throw new \RuntimeException('Unable to find washingmachine dependencies. Please run composer install.');
+}
+
 
 
 
