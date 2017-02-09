@@ -29,4 +29,3 @@ Go to your project page in Gitlab: **Settings ➔ Variables ➔ Add variable**
 
 ### Configure Gitlab CI yml file
 
-TODO
