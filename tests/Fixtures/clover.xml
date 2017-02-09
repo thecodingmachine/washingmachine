@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coverage generated="1486042226">
+  <project timestamp="1486042226">
+    <package name="TheCodingMachine\WashingMachine\Clover">
+      <file name="/home/david/projects/washing-machine/src/Clover/CloverFile.php">
+        <class name="CloverFile" namespace="TheCodingMachine\WashingMachine\Clover">
+          <metrics complexity="4" methods="2" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="11" coveredstatements="9" elements="13" coveredelements="9"/>
+        </class>
+        <line num="19" type="method" name="__construct" visibility="public" complexity="2" crap="2.03" count="1"/>
+        <line num="21" type="stmt" count="1"/>
+        <line num="22" type="stmt" count="1"/>
+        <line num="23" type="stmt" count="1"/>
+        <line num="24" type="stmt" count="0"/>
+        <line num="26" type="stmt" count="1"/>
+        <line num="31" type="method" name="getCoveragePercentage" visibility="public" complexity="2" crap="2.02" count="1"/>
+        <line num="33" type="stmt" count="1"/>
+        <line num="35" type="stmt" count="1"/>
+        <line num="36" type="stmt" count="0"/>
+        <line num="39" type="stmt" count="1"/>
+        <line num="40" type="stmt" count="1"/>
+        <line num="41" type="stmt" count="1"/>
+        <metrics loc="42" ncloc="33" classes="1" methods="2" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="11" coveredstatements="9" elements="13" coveredelements="9"/>
+      </file>
+    </package>
+    <metrics files="1" loc="42" ncloc="33" classes="1" methods="2" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="11" coveredstatements="9" elements="13" coveredelements="9"/>
+  </project>
+</coverage>

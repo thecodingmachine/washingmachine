@@ -1,0 +1,24 @@
+#!/usr/bin/env php
+<?php
+use TheCodingMachine\WashingMachine\Commands\RunCommand;
+use Symfony\Component\Console\Application;
+use Interop\Container\ContainerInterface;
+
+require __DIR__.'/vendor/autoload.php';
+
+
+
+$container = new \Mouf\Picotainer\Picotainer([
+    RunCommand::class => function() {
+        return new RunCommand();
+    },
+    Application::class => function(ContainerInterface $container) {
+        $app = new Application('washing-machine');
+        $app->add($container->get(RunCommand::class));
+        return $app;
+    }
+]);
+
+$app = $container->get(Application::class);
+/* @var $app Application */
+$app->run();

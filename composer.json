@@ -1,0 +1,38 @@
+{
+    "name": "thecodingmachine/washingmachine",
+    "description": "CI tool that integrates with Gitlab to show variations in the CRAP index",
+    "type": "project",
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/Seretos/php-gitlab-api.git"
+        }
+    ],
+    "require": {
+        "m4tthumphrey/php-gitlab-api": "dev-master",
+        "symfony/console": "^3.0",
+        "mouf/picotainer": "^1.0",
+        "symfony/filesystem": "^3.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^5.7"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "David Négrier",
+            "email": "d.negrier@thecodingmachine.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "TheCodingMachine\\WashingMachine\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "TheCodingMachine\\WashingMachine\\": "tests/"
+        }
+    },
+    "bin": [ "washing-machine" ]
+}
