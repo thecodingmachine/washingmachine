@@ -34,5 +34,5 @@
             "TheCodingMachine\\WashingMachine\\": "tests/"
         }
     },
-    "bin": [ "washing-machine" ]
+    "bin": [ "washingmachine" ]
 }
