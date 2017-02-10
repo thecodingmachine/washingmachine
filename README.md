@@ -1,3 +1,12 @@
+[![Latest Stable Version](https://poser.pugx.org/thecodingmachine/washingmachine/v/stable)](https://packagist.org/packages/thecodingmachine/washingmachine)
+[![Total Downloads](https://poser.pugx.org/thecodingmachine/washingmachine/downloads)](https://packagist.org/packages/thecodingmachine/washingmachine)
+[![Latest Unstable Version](https://poser.pugx.org/thecodingmachine/washingmachine/v/unstable)](https://packagist.org/packages/thecodingmachine/washingmachine)
+[![License](https://poser.pugx.org/thecodingmachine/washingmachine/license)](https://packagist.org/packages/thecodingmachine/washingmachine)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/thecodingmachine/washingmachine/badges/quality-score.png?b=1.0)](https://scrutinizer-ci.com/g/thecodingmachine/washingmachine/?branch=1.0)
+[![Build Status](https://travis-ci.org/thecodingmachine/washingmachine.svg?branch=1.0)](https://travis-ci.org/thecodingmachine/washingmachine)
+[![Coverage Status](https://coveralls.io/repos/thecodingmachine/washingmachine/badge.svg?branch=1.0&service=github)](https://coveralls.io/github/thecodingmachine/washingmachine?branch=1.0)
+
+
 # Washing machine
 
 **Work in progress**
