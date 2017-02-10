@@ -82,6 +82,7 @@ class RunCommand extends Command
 
         $buildRef = $config->getGitlabBuildRef();
 
+        $currentBranchName = $config->getCurrentBranchName();
 
         $client = new Client($gitlabUrl);
         $client->authenticate($gitlabApiToken);
@@ -94,9 +95,6 @@ class RunCommand extends Command
         // From the merge_requests API, we can get the list of commits for a single merge request
         // Hence, we can find the merge_request matching a build!
 
-        // STOPPPPP!
-        // Even better! For a given commit, we can add comments! (good for basic processing, but we still need the MR to compare with base branch!)
-
         $buildService = new BuildService($client);
 
         try {
@@ -105,42 +103,22 @@ class RunCommand extends Command
 
             $previousCloverFile = $this->getCloverFileFromBranch($buildService, $mergeRequest['target_project_id'], $mergeRequest['target_branch']);
 
-            //var_dump($previousCloverFile->getCoveragePercentage());exit;
 
-            //$artifactContent = $client->projects->buildArtifacts($mergeRequest['target_project_id'], $build['id']);
-            //file_put_contents('artifact.zip', $artifactContent);
-            //exit;
-            //var_dump($build);exit;
-
-            //var_dump($mergeRequest); exit;
             $sendCommentService->sendCodeCoverageCommentToMergeRequest($cloverFile, $previousCloverFile, $projectName, $mergeRequest['id']);
 
         } catch (MergeRequestNotFoundException $e) {
-            // If there is no merge request attached to this build, let's still make some comments on the commit itself!
+            // If there is no merge request attached to this build, let's skip the merge request comment. We can still make some comments on the commit itself!
 
-            // TODO
             $output->writeln('It seems that this CI build is not part of a merge request. Skipping.');
         }
 
         try {
-            // TODO: move getenv to something testable!!!
-            $lastCommitBuild = $buildService->getLatestBuildFromBranch($projectName, getenv('CI_BUILD_REF_NAME'));
-            $lastCommitCloverFile = $this->getCloverFileFromBranch($buildService, $mergeRequest['target_project_id'], getenv('CI_BUILD_REF_NAME'));
-            var_dump("Last commit ID build");
-            var_dump($lastCommitBuild['id']);
-            $sendCommentService->sendDifferencesComments($cloverFile, $lastCommitCloverFile, $projectName, $buildRef /*$lastCommitBuild['id']*/ /*$buildService->getCommitId($projectName, $buildRef)*/);
+
+            $lastCommitCloverFile = $this->getCloverFileFromBranch($buildService, $mergeRequest['target_project_id'], $currentBranchName);
+            $sendCommentService->sendDifferencesCommentsInCommit($cloverFile, $lastCommitCloverFile, $projectName, $buildRef);
         } catch (BuildNotFoundException $e) {
-            $output->writeln('Unable to find a previous build for this branch. '.$e->getMessage());
+            $output->writeln('Unable to find a previous build for this branch. Skipping adding comments inside the commit. '.$e->getMessage());
         }
-
-
-
-        // MR: target_branch
-        // MR: target_project_id
-
-        //var_dump($buildService->getCommitId($projectName, $buildRef));exit;
-        //var_dump($buildService->findMergeRequestByBuildRef($projectName, $buildRef));exit;
-
 
     }
 

@@ -29,6 +29,11 @@ class Difference
         return $this->newMethod->getFullName();
     }
 
+    public function getMethodShortName() : string
+    {
+        return $this->newMethod->getShortName();
+    }
+
     public function getCrapScore() : float
     {
         return $this->newMethod->getCrap();

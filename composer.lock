@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "142db1a071ee5a648ea9d1ffdc8e385d",
-    "content-hash": "1e3affc85f42b8ee20cf4282fb06bcbb",
+    "hash": "9163f3342b0c8c719da55d64fa23bfc2",
+    "content-hash": "5673a58e832443aaca40dcc951270748",
     "packages": [
         {
             "name": "container-interop/container-interop",
@@ -33,6 +33,48 @@
             ],
             "description": "Promoting the interoperability of container objects (DIC, SL, etc.)",
             "time": "2014-12-30 15:22:37"
+        },
+        {
+            "name": "czproject/git-php",
+            "version": "v3.8.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/czproject/git-php.git",
+                "reference": "0a643071a97b230d16df9264339dc3a5b51d7f66"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/czproject/git-php/zipball/0a643071a97b230d16df9264339dc3a5b51d7f66",
+                "reference": "0a643071a97b230d16df9264339dc3a5b51d7f66",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.4.0"
+            },
+            "require-dev": {
+                "nette/tester": "~1.1.0"
+            },
+            "type": "library",
+            "autoload": {
+                "classmap": [
+                    "src/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "authors": [
+                {
+                    "name": "Jan Pecha",
+                    "email": "janpecha@email.cz"
+                }
+            ],
+            "description": "Library for work with Git repository in PHP.",
+            "keywords": [
+                "git"
+            ],
+            "time": "2016-11-18 07:43:41"
         },
         {
             "name": "kriswallsmith/buzz",

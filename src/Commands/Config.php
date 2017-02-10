@@ -4,6 +4,7 @@
 namespace TheCodingMachine\WashingMachine\Commands;
 
 
+use Cz\Git\GitRepository;
 use Symfony\Component\Console\Input\InputInterface;
 
 /**
@@ -78,5 +79,15 @@ class Config
             }
         }
         return $buildRef;
+    }
+
+    /**
+     * Returns the current branch name (from Git)
+     * @return string
+     */
+    public function getCurrentBranchName() : string
+    {
+        $repo = new GitRepository(getcwd());
+        return $repo->getCurrentBranchName();
     }
 }

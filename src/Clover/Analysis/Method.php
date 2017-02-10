@@ -121,6 +121,11 @@ class Method
         return $this->namespace.'\\'.$this->className.'::'.$this->methodName;
     }
 
+    public function getShortName() : string
+    {
+        return $this->className.'::'.$this->methodName;
+    }
+
     /**
      * @return string
      */

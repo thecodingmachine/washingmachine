@@ -2,6 +2,7 @@
 namespace TheCodingMachine\WashingMachine\Gitlab;
 
 use Gitlab\Client;
+use TheCodingMachine\WashingMachine\Clover\Analysis\Difference;
 use TheCodingMachine\WashingMachine\Clover\CloverFile;
 use TheCodingMachine\WashingMachine\Clover\DiffService;
 
@@ -37,6 +38,8 @@ class SendCommentService
             $style .= 'background-color: #ff6666; color: white';
         }
 
+        $differences = $this->diffService->getMeaningfulDifferences($cloverFile, $previousCloverFile);
+        $differencesHtml = $this->getDifferencesHtml($differences);
 
         // Note: there is a failure in the way Gitlab escapes HTML for the tables. Let's use this!.
         $message = sprintf('<table>
@@ -46,44 +49,18 @@ class SendCommentService
 <td style="%s">%s</td>
 <td width="99%%"></td>
 </tr>
-</table>', $cloverFile->getCoveragePercentage()*100, $style, $additionalText);
+</table><br/>%s', $cloverFile->getCoveragePercentage()*100, $style, $additionalText, $differencesHtml);
 
         $this->client->merge_requests->addComment($projectName, $mergeRequestId, $message);
     }
 
-    public function sendDifferencesComments(CloverFile $cloverFile, CloverFile $previousCloverFile, string $projectName, string $commitId)
+    public function sendDifferencesCommentsInCommit(CloverFile $cloverFile, CloverFile $previousCloverFile, string $projectName, string $commitId)
     {
         $differences = $this->diffService->getMeaningfulDifferences($cloverFile, $previousCloverFile);
 
         foreach ($differences as $difference) {
-            if ($difference->isNew()) {
+            $note = $this->getDifferencesHtml([ $difference ]);
 
-                $note = sprintf('<table>
-<tr>
-<td>Crap&nbsp;score:</td>
-<td style="font-weight: bold">%.2f</td>
-<td width="99%%"></td>
-</tr>
-</table>', $difference->getCrapScore());
-            } else {
-                if ($difference->getCrapDifference() < 0) {
-                    $style = 'background-color: #00994c; color: white';
-                } else {
-                    $style = 'background-color: #ff6666; color: white';
-                }
-
-                $note = sprintf('<table>
-<tr>
-<td>Crap&nbsp;score: </td>
-<td style="font-weight: bold">%.2f</td>
-<td style="%s">(<em>%+.2f</em>)</td>
-<td width="99%%"></td>
-</tr>
-</table>', $difference->getCrapScore(), $style, $difference->getCrapDifference());
-
-            }
-var_dump($difference->getFile());
-            var_dump($difference->getLine());
             $this->client->repositories->createCommitComment($projectName, $commitId, $note, [
                 'path' => $difference->getFile(),
                 'line' => $difference->getLine(),
@@ -91,5 +68,46 @@ var_dump($difference->getFile());
             ]);
         }
 
+    }
+
+    /**
+     * @param Difference[] $differences
+     * @return string
+     */
+    private function getDifferencesHtml(array $differences) : string
+    {
+        $tableTemplate = '<table>
+<tr>
+<th></th>
+<th>Crap&nbsp;score</th>
+<th>Variation</th>
+<th width="99%%"></th>
+</tr>
+%s
+</table>';
+        $tableRows = '';
+        foreach ($differences as $difference) {
+            $style = '';
+            if (!$difference->isNew()) {
+
+                if ($difference->getCrapDifference() < 0) {
+                    $style = 'background-color: #00994c; color: white';
+                } else {
+                    $style = 'background-color: #ff6666; color: white';
+                }
+                $differenceCol = sprintf('%+f', $difference->getCrapDifference());
+            } else {
+                $differenceCol = '<em>New</em>';
+                // TODO: for new rows, it would be really cool to display a color code for the global CRAP score.
+            }
+
+            $tableRows .= sprintf('<tr>
+<td>%s</td>
+<td>%f</td>
+<td %s>%s</td>
+</tr>', $difference->getMethodShortName(), $difference->getCrapScore(), $style, $differenceCol);
+        }
+
+        return sprintf($tableTemplate, $tableRows);
     }
 }
