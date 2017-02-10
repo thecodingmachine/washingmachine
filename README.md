@@ -36,5 +36,37 @@ Go to your project page in Gitlab: **Settings ➔ Variables ➔ Add variable**
 - Key: `GITLAB_API_TOKEN`
 - Value: the token you just received in previous step
 
+### Configure PHPUnit to dump a "clover" test file
+
+
+Let's configure PHPUnit. Go to your `phpunit.xml.dist` file and add:
+
+```
+<phpunit>
+    <logging>
+        <log type="coverage-clover" target="clover.xml"/>
+    </logging>
+</phpunit>
+```
+
+Note: the "clover.xml" file must be written at the root of your GIT repository, so if your `phpunit.xml.dist` sits in a subdirectory, the correct path will be something like "../../clover.xml".
+
 ### Configure Gitlab CI yml file
 
+Now, we need to install the *washingmachine*, and get it to run.
+
+`.gitlab-ci.yml`
+```
+before_script:
+ - composer global require 'thecodingmachine/washingmachine'
+ - docker-php-ext-enable xdebug
+ 
+script:
+ - ...
+ 
+after_script:
+ - /root/.composer/vendor/bin/washingmachine run -v
+```
+
+Notice that we need to make sure the PHP CLI instance of your Docker image has Xdebug enabled.
+This is why we are calling the `docker-php-ext-enable xdebug` command. If you are using a different image for PHP, your mileage may vary.
