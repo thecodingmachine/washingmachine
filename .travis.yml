@@ -22,6 +22,8 @@ install:
 - composer info -D | sort
 script:
 - vendor/bin/phpunit --verbose;
+after_success:
+- vendor/bin/coveralls -v
 before_deploy:
 - curl -LSs http://box-project.github.io/box2/installer.php | php
 - php box.phar --version

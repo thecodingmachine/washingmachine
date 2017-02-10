@@ -16,7 +16,8 @@
         "czproject/git-php": "^3.8"
     },
     "require-dev": {
-        "phpunit/phpunit": "^5.7"
+        "phpunit/phpunit": "^5.7",
+        "satooshi/php-coveralls": "^1.0"
     },
     "license": "MIT",
     "authors": [
