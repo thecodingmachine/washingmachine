@@ -92,6 +92,11 @@ class Config
      */
     public function getCurrentBranchName() : string
     {
+        $branchName = getenv('CI_BUILD_REF_NAME');
+        if ($branchName !== false) {
+            return $branchName;
+        }
+
         $repo = new GitRepository(getcwd());
         return $repo->getCurrentBranchName();
     }
