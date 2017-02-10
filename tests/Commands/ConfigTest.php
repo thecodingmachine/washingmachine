@@ -81,7 +81,7 @@ class ConfigTest extends \PHPUnit_Framework_TestCase
         putenv('CI_BUILD_REPO=http://gitlab-ci-token:xxxxxx@git.example.com/mouf/test.git');
         $input = new ArrayInput([], $this->getInputDefinition());
         $config = new Config($input);
-        $this->assertSame('http://git.example.com/api/v3/', $config->getGitlabUrl());
+        $this->assertSame('http://git.example.com', $config->getGitlabUrl());
     }
 
     public function testGitlabUrlFromParam()
@@ -89,7 +89,15 @@ class ConfigTest extends \PHPUnit_Framework_TestCase
         $input = new ArrayInput(array('--gitlab-url' => 'http://git.example2.com/'), $this->getInputDefinition());
 
         $config = new Config($input);
-        $this->assertSame('http://git.example2.com/api/v3/', $config->getGitlabUrl());
+        $this->assertSame('http://git.example2.com', $config->getGitlabUrl());
+    }
+
+    public function testGitlabApiUrlFromParam()
+    {
+        $input = new ArrayInput(array('--gitlab-url' => 'http://git.example2.com/'), $this->getInputDefinition());
+
+        $config = new Config($input);
+        $this->assertSame('http://git.example2.com/api/v3/', $config->getGitlabApiUrl());
     }
 
     public function testNoGitlabUrl()
