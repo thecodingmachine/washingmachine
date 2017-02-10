@@ -104,7 +104,7 @@ class RunCommand extends Command
             $previousCloverFile = $this->getCloverFileFromBranch($buildService, $mergeRequest['target_project_id'], $mergeRequest['target_branch']);
 
 
-            $sendCommentService->sendCodeCoverageCommentToMergeRequest($cloverFile, $previousCloverFile, $projectName, $mergeRequest['id']);
+            $sendCommentService->sendCodeCoverageCommentToMergeRequest($cloverFile, $previousCloverFile, $projectName, $mergeRequest['id'], $buildRef, $gitlabUrl);
 
         } catch (MergeRequestNotFoundException $e) {
             // If there is no merge request attached to this build, let's skip the merge request comment. We can still make some comments on the commit itself!

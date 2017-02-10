@@ -23,7 +23,7 @@ class SendCommentService
         $this->diffService = $diffService;
     }
 
-    public function sendCodeCoverageCommentToMergeRequest(CloverFile $cloverFile, CloverFile $previousCloverFile, string $projectName, int $mergeRequestId)
+    public function sendCodeCoverageCommentToMergeRequest(CloverFile $cloverFile, CloverFile $previousCloverFile, string $projectName, int $mergeRequestId, string $commitId, string $gitlabUrl)
     {
         $coverage = $cloverFile->getCoveragePercentage();
         $previousCoverage = $previousCloverFile->getCoveragePercentage();
@@ -39,7 +39,7 @@ class SendCommentService
         }
 
         $differences = $this->diffService->getMeaningfulDifferences($cloverFile, $previousCloverFile);
-        $differencesHtml = $this->getDifferencesHtml($differences);
+        $differencesHtml = $this->getDifferencesHtml($differences, $commitId, $gitlabUrl);
 
         // Note: there is a failure in the way Gitlab escapes HTML for the tables. Let's use this!.
         $message = sprintf('<table>
@@ -59,7 +59,7 @@ class SendCommentService
         $differences = $this->diffService->getMeaningfulDifferences($cloverFile, $previousCloverFile);
 
         foreach ($differences as $difference) {
-            $note = $this->getDifferencesHtml([ $difference ]);
+            $note = $this->getDifferencesHtml([ $difference ], $commitId, $projectName);
 
             $this->client->repositories->createCommitComment($projectName, $commitId, $note, [
                 'path' => $difference->getFile(),
@@ -74,7 +74,7 @@ class SendCommentService
      * @param Difference[] $differences
      * @return string
      */
-    private function getDifferencesHtml(array $differences) : string
+    private function getDifferencesHtml(array $differences, string $commitId, string $gitlabUrl, string $projectName) : string
     {
         $tableTemplate = '<table>
 <tr>
@@ -101,13 +101,20 @@ class SendCommentService
                 // TODO: for new rows, it would be really cool to display a color code for the global CRAP score.
             }
 
+            $link = $this->getLinkToMethodInCommit($gitlabUrl, $projectName, $commitId, $difference->getFile(), $difference->getLine());
+
             $tableRows .= sprintf('<tr>
-<td>%s</td>
-<td>%d</td>
-<td style="%s">%s</td>
-</tr>', $difference->getMethodShortName(), $difference->getCrapScore(), $style, $differenceCol);
+<td><code><a href="%s">%s</a></code></td>
+<td style="text-align:center">%d</td>
+<td style="text-align:center;%s">%s</td>
+</tr>', $link, $difference->getMethodShortName(), $difference->getCrapScore(), $style, $differenceCol);
         }
 
         return sprintf($tableTemplate, $tableRows);
+    }
+
+    private function getLinkToMethodInCommit(string $gitlabUrl, string $projectName, string $commit, string $filePath, int $line)
+    {
+        return rtrim($gitlabUrl, '/').'/'.$projectName.'/blob/'.$commit.'/'.ltrim('/', $filePath).'#L'.$line;
     }
 }
