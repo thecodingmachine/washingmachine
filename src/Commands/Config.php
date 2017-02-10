@@ -53,7 +53,12 @@ class Config
             $port     = isset($parsed_url['port']) ? ':' . $parsed_url['port'] : '';
             $gitlabUrl = $scheme.$host.$port;
         }
-        return rtrim($gitlabUrl, '/').'/api/v3/';
+        return rtrim($gitlabUrl, '/');
+    }
+
+    public function getGitlabApiUrl() : string
+    {
+        return $this->getGitlabUrl().'/api/v3/';
     }
 
     public function getGitlabProjectName() : string

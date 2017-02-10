@@ -67,6 +67,7 @@ class RunCommand extends Command
         $gitlabApiToken = $config->getGitlabApiToken();
 
         $gitlabUrl = $config->getGitlabUrl();
+        $gitlabApiUrl = $config->getGitlabApiUrl();
 
 
 
@@ -84,7 +85,7 @@ class RunCommand extends Command
 
         $currentBranchName = $config->getCurrentBranchName();
 
-        $client = new Client($gitlabUrl);
+        $client = new Client($gitlabApiUrl);
         $client->authenticate($gitlabApiToken);
 
         $diffService = new DiffService(1, 20);
