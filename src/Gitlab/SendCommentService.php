@@ -115,6 +115,6 @@ class SendCommentService
 
     private function getLinkToMethodInCommit(string $gitlabUrl, string $projectName, string $commit, string $filePath, int $line)
     {
-        return rtrim($gitlabUrl, '/').'/'.$projectName.'/blob/'.$commit.'/'.ltrim('/', $filePath).'#L'.$line;
+        return rtrim($gitlabUrl, '/').'/'.$projectName.'/blob/'.$commit.'/'.ltrim($filePath, '/').'#L'.$line;
     }
 }
