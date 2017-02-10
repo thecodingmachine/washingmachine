@@ -95,7 +95,7 @@ class SendCommentService
                 } else {
                     $style = 'background-color: #ff6666; color: white';
                 }
-                $differenceCol = sprintf('%+f', $difference->getCrapDifference());
+                $differenceCol = sprintf('%+d', $difference->getCrapDifference());
             } else {
                 $differenceCol = '<em>New</em>';
                 // TODO: for new rows, it would be really cool to display a color code for the global CRAP score.
@@ -103,8 +103,8 @@ class SendCommentService
 
             $tableRows .= sprintf('<tr>
 <td>%s</td>
-<td>%f</td>
-<td %s>%s</td>
+<td>%d</td>
+<td style="%s">%s</td>
 </tr>', $difference->getMethodShortName(), $difference->getCrapScore(), $style, $differenceCol);
         }
 
