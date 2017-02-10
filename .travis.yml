@@ -1,4 +1,5 @@
 language: php
+sudo: false
 env:
   global:
   - DEFAULT_COMPOSER_FLAGS="--no-interaction --no-progress --optimize-autoloader"
@@ -38,4 +39,4 @@ deploy:
   skip_cleanup: true
   on:
     repo: thecodingmachine/washingmachine
-    branch: '1.0'
+    tags: true
