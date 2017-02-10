@@ -39,7 +39,7 @@ class SendCommentService
         }
 
         $differences = $this->diffService->getMeaningfulDifferences($cloverFile, $previousCloverFile);
-        $differencesHtml = $this->getDifferencesHtml($differences, $commitId, $gitlabUrl);
+        $differencesHtml = $this->getDifferencesHtml($differences, $commitId, $gitlabUrl, $projectName);
 
         // Note: there is a failure in the way Gitlab escapes HTML for the tables. Let's use this!.
         $message = sprintf('<table>
@@ -54,12 +54,12 @@ class SendCommentService
         $this->client->merge_requests->addComment($projectName, $mergeRequestId, $message);
     }
 
-    public function sendDifferencesCommentsInCommit(CloverFile $cloverFile, CloverFile $previousCloverFile, string $projectName, string $commitId)
+    public function sendDifferencesCommentsInCommit(CloverFile $cloverFile, CloverFile $previousCloverFile, string $projectName, string $commitId, string $gitlabUrl)
     {
         $differences = $this->diffService->getMeaningfulDifferences($cloverFile, $previousCloverFile);
 
         foreach ($differences as $difference) {
-            $note = $this->getDifferencesHtml([ $difference ], $commitId, $projectName);
+            $note = $this->getDifferencesHtml([ $difference ], $commitId, $gitlabUrl, $projectName);
 
             $this->client->repositories->createCommitComment($projectName, $commitId, $note, [
                 'path' => $difference->getFile(),

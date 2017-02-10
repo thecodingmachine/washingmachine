@@ -115,7 +115,7 @@ class RunCommand extends Command
         try {
 
             $lastCommitCloverFile = $this->getCloverFileFromBranch($buildService, $mergeRequest['target_project_id'], $currentBranchName);
-            $sendCommentService->sendDifferencesCommentsInCommit($cloverFile, $lastCommitCloverFile, $projectName, $buildRef);
+            $sendCommentService->sendDifferencesCommentsInCommit($cloverFile, $lastCommitCloverFile, $projectName, $buildRef, $gitlabUrl);
         } catch (BuildNotFoundException $e) {
             $output->writeln('Unable to find a previous build for this branch. Skipping adding comments inside the commit. '.$e->getMessage());
         }
