@@ -79,7 +79,7 @@ class SendCommentService
         $tableTemplate = '<table>
 <tr>
 <th></th>
-<th>Crap&nbsp;score</th>
+<th>C.R.A.P.</th>
 <th>Variation</th>
 <th width="99%%"></th>
 </tr>

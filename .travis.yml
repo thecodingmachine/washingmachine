@@ -1,0 +1,38 @@
+language: php
+env:
+  global:
+  - DEFAULT_COMPOSER_FLAGS="--no-interaction --no-progress --optimize-autoloader"
+  - TASK_TESTS=1
+  - TASK_TESTS_COVERAGE=0
+  - TASK_CS=1
+  - TASK_SCA=0
+matrix:
+  fast_finish: true
+  include:
+  - php: 7.0
+    env: DEPLOY=yes
+  - php: 7.1
+cache:
+  directories:
+  - "$HOME/.composer/cache"
+before_install:
+- travis_retry composer global require $DEFAULT_COMPOSER_FLAGS hirak/prestissimo
+install:
+- travis_retry composer install $DEFAULT_COMPOSER_FLAGS $COMPOSER_FLAGS
+- composer info -D | sort
+script:
+- vendor/bin/phpunit --verbose;
+before_deploy:
+- curl -LSs http://box-project.github.io/box2/installer.php | php
+- php box.phar --version
+- composer install $DEFAULT_COMPOSER_FLAGS --no-dev
+- composer info -D | sort
+- php -d phar.readonly=false box.phar build
+deploy:
+  provider: releases
+  api_key:
+    secure: sSLPXBctXqf3OLd8CV8gTMTpDHyBQsU8/uTV9CrwCCkkleVOjDz11aRLbgoJ8HaN0wb6n3LQ5FyClcF/lddNdo9D6JZXuZK9CzHFwgUtqGSH3mhCd0cNFgkLV4UYU30i+4MlL+Ov93dmEXFvhAhSEI5zM0NYMDvfp/hTsqdbFUEZOKzCWRWh9RHhz0cGmrdTpv/dyUST+pozAyoB9SaiGOIOYhNtvMSthE7IaivV2Q0fS1tOqP/zfSxGzS04/MP1C1b+Cb1dTJA47oYTbn8ax8LNXT8xO4JQeIOzcqLjcYjDQeWSKyfJzwzAItha+cMqRDSGlquGN8WKrRVc4OESac2oNWulXBRTb6cJ8ZjH0bsEm4FddoLHocPFzWjccoVaeeYorMYCQvyL/ehfPfEKaNAf0+0rxxF2k02OONH8tTpGDwLb7f1u9vFL7W5RxGqGl051pmOSftFSBWHr9h6FZyjUF5jpocrVy5nb7J68CnW+CNOp9Mx494M0l5yclqCd4ej06ZmH+dsLYghOJpZz/qkbN9iW1ZfWxxGzSC1HwM1Mz+7ER6kRD43n+YQQjCqchxA9h4EZ5Kx8Pa9o+48Y29LmP9ap1ISbVS+U4ACYw2SCBkz5mrohBBWkqrwNwUNmC06mALL36Z4cUo7nwTnGtW11vc+CFGsusfYVw/0T1nw=
+  file: washingmachine.phar
+  on:
+    repo: thecodingmachine/washingmachine
+    branch: '1.0'
