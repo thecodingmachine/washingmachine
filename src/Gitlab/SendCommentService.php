@@ -39,7 +39,11 @@ class SendCommentService
         }
 
         $differences = $this->diffService->getMeaningfulDifferences($cloverFile, $previousCloverFile);
-        $differencesHtml = $this->getDifferencesHtml($differences, $commitId, $gitlabUrl, $projectName);
+        if (count($differences) > 0) {
+            $differencesHtml = $this->getDifferencesHtml($differences, $commitId, $gitlabUrl, $projectName);
+        } else {
+            $differencesHtml = 'No major differences in C.R.A.P. score found.';
+        }
 
         // Note: there is a failure in the way Gitlab escapes HTML for the tables. Let's use this!.
         $message = sprintf('<table>

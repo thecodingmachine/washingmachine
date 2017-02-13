@@ -114,8 +114,6 @@ class RunCommand extends Command
         }
 
         try {
-            var_dump("CURRENT_BRANCH_NAME");
-var_dump($currentBranchName);
             $lastCommitCloverFile = $this->getCloverFileFromBranch($buildService, $mergeRequest['target_project_id'], $currentBranchName);
             $sendCommentService->sendDifferencesCommentsInCommit($cloverFile, $lastCommitCloverFile, $projectName, $buildRef, $gitlabUrl);
         } catch (BuildNotFoundException $e) {
