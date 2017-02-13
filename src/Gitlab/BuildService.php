@@ -83,7 +83,7 @@ class BuildService
         $numIter++;
         // Let's find a build in the last 10 commits.
         if ($numIter > 10) {
-            throw new BuildNotFoundException('Could not find a build for branch '.$projectName.':'.$branchName);
+            throw new BuildNotFoundException('Could not find a build for commit '.$projectName.':'.$commitId);
         }
 
         // Let's get the commit info
@@ -91,7 +91,7 @@ class BuildService
         $parentIds = $commit['parent_ids'];
 
         if (count($parentIds) !== 1) {
-            throw new BuildNotFoundException('Could not find a build for branch '.$projectName.':'.$branchName);
+            throw new BuildNotFoundException('Could not find a build for commit '.$projectName.':'.$commitId);
         }
 
         // Not found? Let's recurse.
@@ -108,7 +108,11 @@ class BuildService
     {
         $commitId = $this->getLatestCommitIdFromBranch($projectName, $branchName);
 
-        return $this->getLatestBuildFromCommitId($projectName, $commitId);
+        try {
+            return $this->getLatestBuildFromCommitId($projectName, $commitId);
+        } catch (BuildNotFoundException $e) {
+            throw new BuildNotFoundException('Could not find a build for branch '.$projectName.':'.$branchName, 0, $e);
+        }
     }
 
     public function dumpArtifact(string $projectName, string $buildRef, string $file)
