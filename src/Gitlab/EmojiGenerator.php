@@ -36,7 +36,8 @@ class EmojiGenerator
             30 => ':slight_frown:',
             100 => ':sob:',
             300 => ':scream:',
-            900 => ':skull_crossbones::interrobang::radioactive:'
+            600 => ':radioactive:',
+            900 => ':skull_crossbones:'
         ];
         return new self($emojiMap);
     }
