@@ -3,7 +3,7 @@ namespace TheCodingMachine\WashingMachine\Gitlab;
 
 use Gitlab\Client;
 use TheCodingMachine\WashingMachine\Clover\Analysis\Difference;
-use TheCodingMachine\WashingMachine\Clover\CloverFile;
+use TheCodingMachine\WashingMachine\Clover\CloverFileInterface;
 use TheCodingMachine\WashingMachine\Clover\DiffService;
 
 class SendCommentService
