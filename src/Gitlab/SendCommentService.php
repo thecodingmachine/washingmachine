@@ -90,6 +90,7 @@ class SendCommentService
 %s
 </table>';
         $tableRows = '';
+        $crapScoreEmojiGenerator = EmojiGenerator::createCrapScoreEmojiGenerator();
         foreach ($differences as $difference) {
             $style = '';
             if (!$difference->isNew()) {
@@ -100,18 +101,20 @@ class SendCommentService
                     $style = 'background-color: #ff6666; color: white';
                 }
                 $differenceCol = sprintf('%+d', $difference->getCrapDifference());
+                $crapScoreEmoji = '';
             } else {
                 $differenceCol = '<em>New</em>';
-                // TODO: for new rows, it would be really cool to display a color code for the global CRAP score.
+                // For new rows, let's display an emoji
+                $crapScoreEmoji = $crapScoreEmojiGenerator->getEmoji($difference->getCrapScore());
             }
 
             $link = $this->getLinkToMethodInCommit($gitlabUrl, $projectName, $commitId, $difference->getFile(), $difference->getLine());
 
             $tableRows .= sprintf('<tr>
 <td><code><a href="%s">%s</a></code></td>
-<td style="text-align:center">%d</td>
+<td style="text-align:center">%d%s</td>
 <td style="text-align:center;%s">%s</td>
-</tr>', $link, $difference->getMethodShortName(), $difference->getCrapScore(), $style, $differenceCol);
+</tr>', $link, $difference->getMethodShortName(), $difference->getCrapScore(), $crapScoreEmoji, $style, $differenceCol);
         }
 
         return sprintf($tableTemplate, $tableRows);
