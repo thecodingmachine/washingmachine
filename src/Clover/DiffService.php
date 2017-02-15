@@ -27,11 +27,11 @@ class DiffService
     }
 
     /**
-     * @param CloverFile $newCloverFile
-     * @param CloverFile $oldCloverFile
+     * @param CloverFileInterface $newCloverFile
+     * @param CloverFileInterface $oldCloverFile
      * @return Difference[]
      */
-    public function getMeaningfulDifferences(CloverFile $newCloverFile, CloverFile $oldCloverFile)
+    public function getMeaningfulDifferences(CloverFileInterface $newCloverFile, CloverFileInterface $oldCloverFile)
     {
         $newMethods = $newCloverFile->getMethods();
         $oldMethods = $oldCloverFile->getMethods();

@@ -5,7 +5,7 @@ namespace TheCodingMachine\WashingMachine\Clover;
 
 use TheCodingMachine\WashingMachine\Clover\Analysis\Method;
 
-final class CloverFile
+final class CloverFile implements CloverFileInterface
 {
 
     /**
@@ -27,7 +27,7 @@ final class CloverFile
     {
     }
 
-    public static function fromFile(string $fileName, string $rootDirectory)
+    public static function fromFile(string $fileName, string $rootDirectory) : CloverFile
     {
         $cloverFile = new self();
         $cloverFile->fileName = $fileName;
@@ -42,7 +42,7 @@ final class CloverFile
         return $cloverFile;
     }
 
-    public static function fromString(string $string, string $rootDirectory)
+    public static function fromString(string $string, string $rootDirectory) : CloverFile
     {
         $cloverFile = new self();
         $errorReporing = error_reporting();

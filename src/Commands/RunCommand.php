@@ -2,12 +2,15 @@
 namespace TheCodingMachine\WashingMachine\Commands;
 
 use Gitlab\Client;
+use Gitlab\Exception\RuntimeException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use TheCodingMachine\WashingMachine\Clover\CloverFile;
+use TheCodingMachine\WashingMachine\Clover\CloverFileInterface;
 use TheCodingMachine\WashingMachine\Clover\DiffService;
+use TheCodingMachine\WashingMachine\Clover\EmptyCloverFile;
 use TheCodingMachine\WashingMachine\Gitlab\BuildNotFoundException;
 use TheCodingMachine\WashingMachine\Gitlab\BuildService;
 use TheCodingMachine\WashingMachine\Gitlab\MergeRequestNotFoundException;
@@ -102,8 +105,18 @@ class RunCommand extends Command
             $mergeRequest = $buildService->findMergeRequestByBuildRef($projectName, $buildRef);
 
 
-            $previousCloverFile = $this->getCloverFileFromBranch($buildService, $mergeRequest['target_project_id'], $mergeRequest['target_branch']);
-
+            try {
+                $previousCloverFile = $this->getCloverFileFromBranch($buildService, $mergeRequest['target_project_id'], $mergeRequest['target_branch']);
+            } catch (RuntimeException $e) {
+                if ($e->getCode() === 404) {
+                    // We could not find a previous clover file in the master branch.
+                    // Maybe this branch is the first to contain clover files?
+                    // Let's deal with this by generating a fake "empty" clover file.
+                    $previousCloverFile = EmptyCloverFile::create();
+                } else {
+                    throw $e;
+                }
+            }
 
             $sendCommentService->sendCodeCoverageCommentToMergeRequest($cloverFile, $previousCloverFile, $projectName, $mergeRequest['id'], $buildRef, $gitlabUrl);
 
@@ -122,7 +135,7 @@ class RunCommand extends Command
 
     }
 
-    public function getCloverFileFromBranch(BuildService $buildService, string $projectName, string $targetBranch) : CloverFile
+    public function getCloverFileFromBranch(BuildService $buildService, string $projectName, string $targetBranch) : CloverFileInterface
     {
         $tmpFile = tempnam(sys_get_temp_dir(), 'art').'.zip';
 

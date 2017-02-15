@@ -23,7 +23,7 @@ class SendCommentService
         $this->diffService = $diffService;
     }
 
-    public function sendCodeCoverageCommentToMergeRequest(CloverFile $cloverFile, CloverFile $previousCloverFile, string $projectName, int $mergeRequestId, string $commitId, string $gitlabUrl)
+    public function sendCodeCoverageCommentToMergeRequest(CloverFileInterface $cloverFile, CloverFileInterface $previousCloverFile, string $projectName, int $mergeRequestId, string $commitId, string $gitlabUrl)
     {
         $coverage = $cloverFile->getCoveragePercentage();
         $previousCoverage = $previousCloverFile->getCoveragePercentage();
@@ -58,7 +58,7 @@ class SendCommentService
         $this->client->merge_requests->addComment($projectName, $mergeRequestId, $message);
     }
 
-    public function sendDifferencesCommentsInCommit(CloverFile $cloverFile, CloverFile $previousCloverFile, string $projectName, string $commitId, string $gitlabUrl)
+    public function sendDifferencesCommentsInCommit(CloverFileInterface $cloverFile, CloverFileInterface $previousCloverFile, string $projectName, string $commitId, string $gitlabUrl)
     {
         $differences = $this->diffService->getMeaningfulDifferences($cloverFile, $previousCloverFile);
 
