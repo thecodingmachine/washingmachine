@@ -60,7 +60,7 @@ class DiffService
 
         // Now, let's order the differences by crap order.
         usort($differences, function(Difference $d1, Difference $d2) {
-           return $d1->getCrapScore() <=> $d2->getCrapScore();
+           return $d2->getCrapScore() <=> $d1->getCrapScore();
         });
 
         // Now, let's limit the number of returned differences
