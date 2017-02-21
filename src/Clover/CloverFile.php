@@ -29,6 +29,10 @@ final class CloverFile implements CloverFileInterface
 
     public static function fromFile(string $fileName, string $rootDirectory) : CloverFile
     {
+        if (!file_exists($fileName)) {
+            throw new \RuntimeException('Could not find file "'.$fileName.'". The unit tests did not run or broke before the end, or the file path is incorrect.');
+        }
+
         $cloverFile = new self();
         $cloverFile->fileName = $fileName;
         $errorReporing = error_reporting();

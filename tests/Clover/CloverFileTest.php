@@ -17,6 +17,12 @@ class CloverFileTest extends \PHPUnit_Framework_TestCase
     public function testBadFile()
     {
         $this->expectException(\RuntimeException::class);
+        CloverFile::fromFile(__DIR__.'/../Fixtures/broken.xml', '/');
+    }
+
+    public function testNotExistFile()
+    {
+        $this->expectException(\RuntimeException::class);
         CloverFile::fromFile(__DIR__.'/../Fixtures/notexist.xml', '/');
     }
 

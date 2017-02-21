@@ -106,7 +106,7 @@ class RunCommand extends Command
 
 
             try {
-                $previousCloverFile = $this->getCloverFileFromBranch($buildService, $mergeRequest['target_project_id'], $mergeRequest['target_branch']);
+                $previousCloverFile = $this->getCloverFileFromBranch($buildService, $mergeRequest['target_project_id'], $mergeRequest['target_branch'], $cloverFilePath);
             } catch (RuntimeException $e) {
                 if ($e->getCode() === 404) {
                     // We could not find a previous clover file in the master branch.
@@ -128,7 +128,7 @@ class RunCommand extends Command
 
         try {
             $targetProjectId = $mergeRequest['target_project_id'] ?? $projectName;
-            $lastCommitCloverFile = $this->getCloverFileFromBranch($buildService, $targetProjectId, $currentBranchName);
+            $lastCommitCloverFile = $this->getCloverFileFromBranch($buildService, $targetProjectId, $currentBranchName, $cloverFilePath);
             $sendCommentService->sendDifferencesCommentsInCommit($cloverFile, $lastCommitCloverFile, $projectName, $buildRef, $gitlabUrl);
         } catch (BuildNotFoundException $e) {
             $output->writeln('Unable to find a previous build for this branch. Skipping adding comments inside the commit. '.$e->getMessage());
@@ -136,7 +136,7 @@ class RunCommand extends Command
 
     }
 
-    public function getCloverFileFromBranch(BuildService $buildService, string $projectName, string $targetBranch) : CloverFileInterface
+    public function getCloverFileFromBranch(BuildService $buildService, string $projectName, string $targetBranch, string $cloverPath) : CloverFileInterface
     {
         $tmpFile = tempnam(sys_get_temp_dir(), 'art').'.zip';
 
@@ -145,7 +145,7 @@ class RunCommand extends Command
         if ($zipFile->open($tmpFile)!==true) {
             throw new \RuntimeException('Invalid ZIP archive '.$tmpFile);
         }
-        $cloverFileString = $zipFile->getFromName('clover.xml');
+        $cloverFileString = $zipFile->getFromName($cloverPath);
 
         $cloverFile = CloverFile::fromString($cloverFileString, getcwd());
         return $cloverFile;
