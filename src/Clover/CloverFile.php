@@ -69,6 +69,11 @@ final class CloverFile implements CloverFileInterface
 
         $statements = (float) $metrics[0]['statements'];
         $coveredStatements = (float) $metrics[0]['coveredstatements'];
+
+        if ($statements === 0.0) {
+            return 0.0;
+        }
+
         return $coveredStatements/$statements;
     }
 
