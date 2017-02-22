@@ -46,7 +46,7 @@ class Method
      */
     private $line;
 
-    public function __construct(string $methodName, string $className, string $namespace, string $visibility, float $complexity, float $crap, int $count, string $file, int $line)
+    public function __construct(string $methodName, string $className, string $namespace, float $complexity, float $crap, string $visibility = null, int $count = null, string $file = null, int $line = null)
     {
 
         $this->methodName = $methodName;
@@ -129,16 +129,35 @@ class Method
     /**
      * @return string
      */
-    public function getFile(): string
+    public function getFile()
     {
         return $this->file;
     }
 
     /**
-     * @return string
+     * @return int
      */
-    public function getLine(): string
+    public function getLine()
     {
         return $this->line;
+    }
+
+    /**
+     * Merges the method passed in parameter in this method.
+     * Any non null property will override this object property.
+     * Return a NEW object.
+     *
+     * @param Method $method
+     */
+    public function merge(Method $method): Method
+    {
+        $clone = clone $this;
+        $clone->visibility = $method->visibility ?? $this->visibility;
+        $clone->complexity = $method->complexity ?? $this->complexity;
+        $clone->crap = $method->crap ?? $this->crap;
+        $clone->count = $method->count ?? $this->count;
+        $clone->file = $method->file ?? $this->file;
+        $clone->line = $method->line ?? $this->line;
+        return $clone;
     }
 }

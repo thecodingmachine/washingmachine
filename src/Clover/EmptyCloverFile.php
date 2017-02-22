@@ -5,7 +5,7 @@ namespace TheCodingMachine\WashingMachine\Clover;
 
 use TheCodingMachine\WashingMachine\Clover\Analysis\Method;
 
-final class EmptyCloverFile implements CloverFileInterface
+final class EmptyCloverFile implements CrapMethodFetcherInterface, CoverageDetectorInterface
 {
     private function __construct()
     {

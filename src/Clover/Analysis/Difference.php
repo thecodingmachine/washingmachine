@@ -49,12 +49,12 @@ class Difference
         return $this->newMethod->getCrap() - $this->oldMethod->getCrap();
     }
 
-    public function getFile() : string
+    public function getFile()
     {
         return $this->newMethod->getFile();
     }
 
-    public function getLine() : int
+    public function getLine()
     {
         return $this->newMethod->getLine();
     }

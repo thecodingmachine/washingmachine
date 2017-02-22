@@ -27,6 +27,11 @@ class Config
         return $this->input->getOption('clover');
     }
 
+    public function getCrap4JFilePath() : string
+    {
+        return $this->input->getOption('crap4j');
+    }
+
     public function getGitlabApiToken() : string
     {
         $gitlabApiToken = $this->input->getOption('gitlab-api-token');

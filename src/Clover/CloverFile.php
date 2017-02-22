@@ -5,7 +5,7 @@ namespace TheCodingMachine\WashingMachine\Clover;
 
 use TheCodingMachine\WashingMachine\Clover\Analysis\Method;
 
-final class CloverFile implements CloverFileInterface
+final class CloverFile implements CrapMethodFetcherInterface, CoverageDetectorInterface
 {
 
     /**
@@ -35,10 +35,10 @@ final class CloverFile implements CloverFileInterface
 
         $cloverFile = new self();
         $cloverFile->fileName = $fileName;
-        $errorReporing = error_reporting();
-        $oldErrorReporing = error_reporting($errorReporing & ~E_WARNING);
+        $errorReporting = error_reporting();
+        $oldErrorReporting = error_reporting($errorReporting & ~E_WARNING);
         $cloverFile->root = simplexml_load_file($fileName);
-        error_reporting($oldErrorReporing);
+        error_reporting($oldErrorReporting);
         if ($cloverFile->root === false) {
             throw new \RuntimeException('Invalid XML file passed or unable to load file: "'.$fileName.'": '.error_get_last()['message']);
         }
@@ -49,10 +49,10 @@ final class CloverFile implements CloverFileInterface
     public static function fromString(string $string, string $rootDirectory) : CloverFile
     {
         $cloverFile = new self();
-        $errorReporing = error_reporting();
-        $oldErrorReporing = error_reporting($errorReporing & ~E_WARNING);
+        $errorReporting = error_reporting();
+        $oldErrorReporting = error_reporting($errorReporting & ~E_WARNING);
         $cloverFile->root = simplexml_load_string($string);
-        error_reporting($oldErrorReporing);
+        error_reporting($oldErrorReporting);
         if ($cloverFile->root === false) {
             throw new \RuntimeException('Invalid XML file passed or unable to load string: '.error_get_last()['message']);
         }
@@ -115,7 +115,7 @@ final class CloverFile implements CloverFileInterface
                             $fileName = substr($fileName, strlen($this->rootDirectory));
                         }
 
-                        $method = new Method($methodName, $currentClass, $currentNamespace, $visibility, $complexity, $crap, $count, $fileName, $line);
+                        $method = new Method($methodName, $currentClass, $currentNamespace, $complexity, $crap, $visibility, $count, $fileName, $line);
                         $methods[$method->getFullName()] = $method;
 
                     }

@@ -3,13 +3,8 @@ namespace TheCodingMachine\WashingMachine\Clover;
 
 use TheCodingMachine\WashingMachine\Clover\Analysis\Method;
 
-interface CloverFileInterface
+interface CrapMethodFetcherInterface
 {
-    /**
-     * @return float
-     */
-    public function getCoveragePercentage(): float;
-
     /**
      * Returns an array of method objects, indexed by method full name.
      *
