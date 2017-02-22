@@ -73,7 +73,6 @@ class RunCommand extends Command
         $cloverFilePath = $config->getCloverFilePath();
 
         $cloverFile = null;
-
         if (file_exists($cloverFilePath)) {
             $cloverFile = CloverFile::fromFile($cloverFilePath, getcwd());
             //$output->writeln(sprintf('Code coverage: %.2f%%', $cloverFile->getCoveragePercentage() * 100));
@@ -81,6 +80,7 @@ class RunCommand extends Command
 
         $crap4JFilePath = $config->getCrap4JFilePath();
 
+        $crap4jFile = null;
         if (file_exists($crap4JFilePath)) {
             $crap4jFile = Crap4JFile::fromFile($crap4JFilePath);
         }
@@ -153,7 +153,7 @@ class RunCommand extends Command
 
             $message = new Message();
             $message->addCoverageMessage($codeCoverageProvider, $previousCodeCoverageProvider);
-            $message->addDifferencesHtml($methodsProvider, $previousMethodsProvider, $diffService);
+            $message->addDifferencesHtml($methodsProvider, $previousMethodsProvider, $diffService, $buildRef, $gitlabUrl, $projectName);
 
             $client->merge_requests->addComment($projectName, $mergeRequest['id'], (string) $message);
 
