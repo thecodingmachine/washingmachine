@@ -30,7 +30,7 @@ class SendCommentService
 
         foreach ($differences as $difference) {
             $message = new Message();
-            $message->addDifference($difference, $projectName, $commitId, $gitlabUrl);
+            $message->addDifference($difference, $commitId, $gitlabUrl, $projectName);
 
             $options = [];
             if ($difference->getFile() !== null) {
