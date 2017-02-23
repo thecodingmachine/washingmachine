@@ -119,11 +119,14 @@ class Message
     {
         list($text, $isComplete) = $this->getFirstLines($file, self::MAX_NB_LINES_PER_FILE);
 
-        $this->msg .= sprintf('<strong>%s</strong>', $file->getFilename());
-        $this->msg .= sprintf('<pre>%s%s</pre>', $text, $isComplete?'':'...');
+        $text = str_replace('```', '\\```', $text);
+        $text = str_replace('~~~', '\\~~~', $text);
+
+        $this->msg .= sprintf("<strong>%s</strong>\n", $file->getFilename());
+        $this->msg .= sprintf("```\n%s\n%s\n```\n", $text, $isComplete?'':'...');
 
         if (!$isComplete) {
-            $this->msg .= sprintf('<a href="%s">Download complete file</a>', $this->getArtifactFileUrl($file->getFilename(), $gitlabUrl, $projectName, $buildId));
+            $this->msg .= sprintf('[Download complete file](%s)', $this->getArtifactFileUrl($file->getFilename(), $gitlabUrl, $projectName, $buildId));
         }
     }
 
