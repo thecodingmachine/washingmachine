@@ -51,6 +51,8 @@ Let's configure PHPUnit. Go to your `phpunit.xml.dist` file and add:
 
 Note: the "clover.xml" file must be written at the root of your GIT repository, so if your `phpunit.xml.dist` sits in a subdirectory, the correct path will be something like "../../clover.xml".
 
+Alternatively, washing-machine also knows how to read Crap4J files. Crap4J files contain Crap score, but not code coverage score so you will get slightly less data from Crap4J. The expected file name is "crap4j.xml".
+
 ### Configure Gitlab CI yml file
 
 Now, we need to install the *washingmachine*, and get it to run.
@@ -59,14 +61,12 @@ Now, we need to install the *washingmachine*, and get it to run.
 ```
 before_script:
  - composer global require 'thecodingmachine/washingmachine'
- - docker-php-ext-enable xdebug
  
 script:
- - ...
+ - phpdbg -qrr vendor/bin/phpunit
  
 after_script:
  - /root/.composer/vendor/bin/washingmachine run -v
 ```
 
-Notice that we need to make sure the PHP CLI instance of your Docker image has Xdebug enabled.
-This is why we are calling the `docker-php-ext-enable xdebug` command. If you are using a different image for PHP, your mileage may vary.
+Notice that we need to make sure the PHPDbg extension for PHP is installed. Also, make sure that Xdebug is NOT enabled on your Docker instance. Xdebug can also return code coverage data but is less accurate than PHPDbg, leading to wrong CRAP score results.

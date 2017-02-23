@@ -14,6 +14,8 @@ use TheCodingMachine\WashingMachine\Clover\DiffService;
  */
 class Message
 {
+    const MAX_NB_LINES_PER_FILE = 50;
+
     private $msg = '';
 
     public function addCoverageMessage(CoverageDetectorInterface $coverageDetector, CoverageDetectorInterface $previousCoverageDetector)
@@ -113,8 +115,48 @@ class Message
         return rtrim($gitlabUrl, '/').'/'.$projectName.'/blob/'.$commit.'/'.ltrim($filePath, '/').'#L'.$line;
     }
 
+    public function addFile(\SplFileInfo $file, string $gitlabUrl, string $projectName, string $buildId)
+    {
+        list($text, $isComplete) = $this->getFirstLines($file, self::MAX_NB_LINES_PER_FILE);
+
+        $this->msg .= sprintf('<strong>%s</strong>', $file->getFilename());
+        $this->msg .= sprintf('<pre>%s%s</pre>', $text, $isComplete?'':'...');
+
+        if (!$isComplete) {
+            $this->msg .= sprintf('<a href="%s">Download complete file</a>', $this->getArtifactFileUrl($file->getFilename(), $gitlabUrl, $projectName, $buildId));
+        }
+    }
+
+    private function getArtifactFileUrl(string $fileName, string $gitlabUrl, string $projectName, int $buildId) : string
+    {
+        return $gitlabUrl.'/'.$projectName.'/builds/'.$buildId.'/artifacts/file/'.$fileName;
+    }
+
+    /**
+     * Returns the first lines of a file
+     *
+     * @param \SplFileInfo $file
+     * @param int $maxLines
+     * @return array First element: the string, second element: whether the returned string represents the whole file or not.
+     */
+    private function getFirstLines(\SplFileInfo $file, int $maxLines) : array
+    {
+        // Let's get 50 lines at most.
+        $cnt = $maxLines;
+        $fp = $file->openFile();
+        $str = '';
+        while (($buffer = fgets($fp, 4096)) !== false && $cnt !== 0) {
+            $str .= $buffer;
+            $cnt--;
+        }
+        fclose($fp);
+
+        return [$str, $cnt !== 0];
+    }
+
     public function __toString()
     {
         return $this->msg;
     }
+
 }

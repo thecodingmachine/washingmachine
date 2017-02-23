@@ -63,6 +63,16 @@ class RunCommand extends Command
                 InputOption::VALUE_REQUIRED,
                 'The Gitlab CI build reference. If not specified, it is deduced from the CI_BUILD_REF environment variable.',
                 null)
+            ->addOption('gitlab-build-id',
+                'b',
+                InputOption::VALUE_REQUIRED,
+                'The Gitlab CI build id. If not specified, it is deduced from the CI_BUILD_ID environment variable.',
+                null)
+            ->addOption('file',
+                'f',
+                InputOption::VALUE_IS_ARRAY | InputOption::VALUE_REQUIRED,
+                'Text file to be sent in the merge request comments (can be used multiple times).',
+                [])
         ;
     }
 
@@ -85,6 +95,8 @@ class RunCommand extends Command
             $crap4jFile = Crap4JFile::fromFile($crap4JFilePath);
         }
 
+        $files = $config->getFiles();
+
         $methodsProvider = null;
         $codeCoverageProvider = null;
 
@@ -96,8 +108,8 @@ class RunCommand extends Command
             $codeCoverageProvider = $cloverFile;
         } elseif ($crap4jFile !== null) {
             $methodsProvider = $crap4jFile;
-        } else {
-            throw new \RuntimeException('Could not find nor clover file, neither crap4j file for analysis. Searched paths: '.$cloverFilePath.' and '.$crap4JFilePath);
+        } elseif (empty($files)) {
+            throw new \RuntimeException('Could not find nor clover file, neither crap4j file for analysis nor files to send in comments. Nothing done. Searched paths: '.$cloverFilePath.' and '.$crap4JFilePath);
         }
 
         $gitlabApiToken = $config->getGitlabApiToken();
@@ -154,6 +166,15 @@ class RunCommand extends Command
             $message = new Message();
             $message->addCoverageMessage($codeCoverageProvider, $previousCodeCoverageProvider);
             $message->addDifferencesHtml($methodsProvider, $previousMethodsProvider, $diffService, $buildRef, $gitlabUrl, $projectName);
+
+            foreach ($files as $file) {
+                if (!file_exists($file)) {
+                    $output->writeln('<error>Could not find file to send "'.$file.'". Skipping this file.</error>');
+                    continue;
+                }
+
+                $message->addFile(new \SplFileInfo($file), $config->getGitlabUrl(), $projectName, $config->getGitlabBuildId());
+            }
 
             $client->merge_requests->addComment($projectName, $mergeRequest['id'], (string) $message);
 

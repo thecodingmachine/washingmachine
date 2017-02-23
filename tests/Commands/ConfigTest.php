@@ -38,7 +38,17 @@ class ConfigTest extends \PHPUnit_Framework_TestCase
                 'r',
                 InputOption::VALUE_REQUIRED,
                 'The Gitlab CI build reference. If not specified, it is deduced from the CI_BUILD_REF environment variable.',
-                null)
+                null),
+            new InputOption('gitlab-build-id',
+                'b',
+                InputOption::VALUE_REQUIRED,
+                'The Gitlab CI build id. If not specified, it is deduced from the CI_BUILD_ID environment variable.',
+                null),
+            new InputOption('file',
+                'f',
+                InputOption::VALUE_IS_ARRAY | InputOption::VALUE_REQUIRED,
+                'Text file to be sent in the merge request comments (can be used multiple times).',
+                []),
         ]);
     }
 
@@ -160,5 +170,40 @@ class ConfigTest extends \PHPUnit_Framework_TestCase
         $config = new Config($input);
         $this->expectException(\RuntimeException::class);
         $config->getGitlabBuildRef();
+    }
+
+    public function testGitlabBuildIdFromEnv()
+    {
+        putenv('CI_BUILD_ID=42');
+        $input = new ArrayInput([], $this->getInputDefinition());
+        $config = new Config($input);
+        $this->assertSame(42, $config->getGitlabBuildId());
+    }
+
+    public function testGitlabBuildIdFromParam()
+    {
+        $input = new ArrayInput(array('--gitlab-build-id' => '42'), $this->getInputDefinition());
+
+        $config = new Config($input);
+        $this->assertSame(42, $config->getGitlabBuildId());
+    }
+
+    public function testNoGitlabBuildId()
+    {
+        putenv('CI_BUILD_ID');
+        $input = new ArrayInput([], $this->getInputDefinition());
+
+        $config = new Config($input);
+        $this->expectException(\RuntimeException::class);
+        $config->getGitlabBuildId();
+    }
+
+
+    public function testFile()
+    {
+        $input = new ArrayInput(array('--file' => ['foo.txt']), $this->getInputDefinition());
+
+        $config = new Config($input);
+        $this->assertSame(['foo.txt'], $config->getFiles());
     }
 }

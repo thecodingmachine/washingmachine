@@ -91,6 +91,18 @@ class Config
         return $buildRef;
     }
 
+    public function getGitlabBuildId() : int
+    {
+        $buildId = $this->input->getOption('gitlab-build-id');
+        if ($buildId === null) {
+            $buildId = getenv('CI_BUILD_ID');
+            if ($buildId === false) {
+                throw new \RuntimeException('Could not find the Gitlab build id in the "CI_BUILD_ID" environment variable (usually set by Gitlab CI). Either set this environment variable or pass the build id via the --gitlab-build-id command line option.');
+            }
+        }
+        return $buildId;
+    }
+
     /**
      * Returns the current branch name (from Git)
      * @return string
@@ -104,5 +116,10 @@ class Config
 
         $repo = new GitRepository(getcwd());
         return $repo->getCurrentBranchName();
+    }
+
+    public function getFiles() : array
+    {
+        return $this->input->getOption('file');
     }
 }
