@@ -109,7 +109,7 @@ class RunCommand extends Command
         } elseif ($crap4jFile !== null) {
             $methodsProvider = $crap4jFile;
         } elseif (empty($files)) {
-            throw new \RuntimeException('Could not find nor clover file, neither crap4j file for analysis nor files to send in comments. Nothing done. Searched paths: '.$cloverFilePath.' and '.$crap4JFilePath);
+            throw new \RuntimeException('Could not find neither clover file, nor crap4j file for analysis nor files to send in comments. Nothing done. Searched paths: '.$cloverFilePath.' and '.$crap4JFilePath);
         }
 
         $gitlabApiToken = $config->getGitlabApiToken();
@@ -164,8 +164,16 @@ class RunCommand extends Command
             }
 
             $message = new Message();
-            $message->addCoverageMessage($codeCoverageProvider, $previousCodeCoverageProvider);
-            $message->addDifferencesHtml($methodsProvider, $previousMethodsProvider, $diffService, $buildRef, $gitlabUrl, $projectName);
+            if ($codeCoverageProvider !== null) {
+                $message->addCoverageMessage($codeCoverageProvider, $previousCodeCoverageProvider);
+            } else {
+                $output->writeln('Could not find clover file for code coverage analysis.');
+            }
+            if ($methodsProvider !== null) {
+                $message->addDifferencesHtml($methodsProvider, $previousMethodsProvider, $diffService, $buildRef, $gitlabUrl, $projectName);
+            } else {
+                $output->writeln('Could not find clover file nor crap4j file for CRAP score analysis.');
+            }
 
             foreach ($files as $file) {
                 if (!file_exists($file)) {
@@ -189,6 +197,8 @@ class RunCommand extends Command
             list($lastCommitCloverFile) = $this->getMeasuresFromBranch($buildService, $targetProjectId, $currentBranchName, $cloverFilePath, $crap4JFilePath);
 
             $sendCommentService->sendDifferencesCommentsInCommit($cloverFile, $lastCommitCloverFile, $projectName, $buildRef, $gitlabUrl);
+
+            // TODO: open an issue if no merge request and failing build.
         } catch (BuildNotFoundException $e) {
             $output->writeln('Unable to find a previous build for this branch. Skipping adding comments inside the commit. '.$e->getMessage());
         }
