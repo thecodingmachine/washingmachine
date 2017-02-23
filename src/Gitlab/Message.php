@@ -143,13 +143,12 @@ class Message
     {
         // Let's get 50 lines at most.
         $cnt = $maxLines;
-        $fp = $file->openFile();
+        $fileObject = $file->openFile();
         $str = '';
-        while (($buffer = fgets($fp, 4096)) !== false && $cnt !== 0) {
-            $str .= $buffer;
+        while (!$fileObject->eof() && $cnt !== 0) {
+            $str .= $fileObject->fgets();
             $cnt--;
         }
-        fclose($fp);
 
         return [$str, $cnt !== 0];
     }

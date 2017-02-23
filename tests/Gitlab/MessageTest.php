@@ -34,4 +34,28 @@ class MessageTest extends \PHPUnit_Framework_TestCase
         $this->assertNotContains('<a', $msg);
     }
 
+    public function testAddSmallMessage()
+    {
+        $message = new Message();
+
+        $message->addFile(new \SplFileInfo(__DIR__.'/../Fixtures/small.txt'), 'http://gitlab.example.com', 'foo/bar', 42);
+
+        $str = (string) $message;
+
+        $this->assertContains('small.txt', $str);
+        $this->assertContains('smalltext', $str);
+    }
+
+    public function testAddLargeMessage()
+    {
+        $message = new Message();
+
+        $message->addFile(new \SplFileInfo(__DIR__.'/../Fixtures/large.txt'), 'http://gitlab.example.com', 'foo/bar', 42);
+
+        $str = (string) $message;
+
+        $this->assertContains('large.txt', $str);
+        $this->assertNotContains('largetext', $str);
+        $this->assertContains('http://gitlab.example.com/', $str);
+    }
 }
