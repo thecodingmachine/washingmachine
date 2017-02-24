@@ -122,4 +122,9 @@ class Config
     {
         return $this->input->getOption('file');
     }
+
+    public function isOpenIssue() : bool
+    {
+        return $this->input->getOption('open-issue');
+    }
 }

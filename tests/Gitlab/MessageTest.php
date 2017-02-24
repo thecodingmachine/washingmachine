@@ -18,7 +18,7 @@ class MessageTest extends \PHPUnit_Framework_TestCase
         $message = new Message();
         $message->addDifferencesHtml($cloverFile, $cloverFile, new DiffService(5, 20), 42, 'http://gitlab', 'my_group/my_project');
 
-        $this->assertSame('No meaningful differences in code complexity detected.', (string) $message);
+        $this->assertSame("No meaningful differences in code complexity detected.\n", (string) $message);
     }
 
     public function testFromCrap4J()

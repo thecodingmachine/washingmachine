@@ -125,10 +125,10 @@ class Message
         $url = $this->getArtifactFileUrl($file->getFilename(), $gitlabUrl, $projectName, $buildId);
 
         $this->msg .= sprintf("\n<strong>[%s](%s)</strong>\n", $file->getFilename(), $url);
-        $this->msg .= sprintf("```\n%s\n%s\n```\n", $text, $isComplete?'':'...');
+        $this->msg .= sprintf("```\n%s%s```\n", $text, $isComplete?'':"... (file truncated)\n");
 
         if (!$isComplete) {
-            $this->msg .= sprintf('[Download complete file](%s)', $url);
+            $this->msg .= sprintf("[Download complete file](%s)\n", $url);
         }
     }
 

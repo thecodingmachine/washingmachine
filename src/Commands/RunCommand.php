@@ -3,6 +3,7 @@ namespace TheCodingMachine\WashingMachine\Commands;
 
 use Gitlab\Client;
 use Gitlab\Exception\RuntimeException;
+use Gitlab\Model\Project;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -73,6 +74,10 @@ class RunCommand extends Command
                 InputOption::VALUE_IS_ARRAY | InputOption::VALUE_REQUIRED,
                 'Text file to be sent in the merge request comments (can be used multiple times).',
                 [])
+            ->addOption('open-issue',
+                'i',
+                InputOption::VALUE_NONE,
+                'Opens an issue (if the build is not part of a merge request)')
         ;
     }
 
@@ -149,19 +154,7 @@ class RunCommand extends Command
             $mergeRequest = $buildService->findMergeRequestByBuildRef($projectName, $buildRef);
 
 
-            try {
-                list($previousCodeCoverageProvider, $previousMethodsProvider) = $this->getMeasuresFromBranch($buildService, $mergeRequest['target_project_id'], $mergeRequest['target_branch'], $cloverFilePath, $crap4JFilePath);
-            } catch (RuntimeException $e) {
-                if ($e->getCode() === 404) {
-                    // We could not find a previous clover file in the master branch.
-                    // Maybe this branch is the first to contain clover files?
-                    // Let's deal with this by generating a fake "empty" clover file.
-                    $previousCodeCoverageProvider = EmptyCloverFile::create();
-                    $previousMethodsProvider = EmptyCloverFile::create();
-                } else {
-                    throw $e;
-                }
-            }
+            list($previousCodeCoverageProvider, $previousMethodsProvider) = $this->getMeasuresFromBranch($buildService, $mergeRequest['target_project_id'], $mergeRequest['target_branch'], $cloverFilePath, $crap4JFilePath);
 
             $message = new Message();
             if ($codeCoverageProvider !== null) {
@@ -175,14 +168,7 @@ class RunCommand extends Command
                 $output->writeln('Could not find clover file nor crap4j file for CRAP score analysis.');
             }
 
-            foreach ($files as $file) {
-                if (!file_exists($file)) {
-                    $output->writeln('<error>Could not find file to send "'.$file.'". Skipping this file.</error>');
-                    continue;
-                }
-
-                $message->addFile(new \SplFileInfo($file), $config->getGitlabUrl(), $projectName, $config->getGitlabBuildId());
-            }
+            $this->addFilesToMessage($message, $files, $output);
 
             $client->merge_requests->addComment($projectName, $mergeRequest['id'], (string) $message);
 
@@ -194,11 +180,35 @@ class RunCommand extends Command
 
         try {
             $targetProjectId = $mergeRequest['target_project_id'] ?? $projectName;
-            list($lastCommitCloverFile) = $this->getMeasuresFromBranch($buildService, $targetProjectId, $currentBranchName, $cloverFilePath, $crap4JFilePath);
+            list($lastCommitCoverage, $lastCommitMethodsProvider) = $this->getMeasuresFromBranch($buildService, $targetProjectId, $currentBranchName, $cloverFilePath, $crap4JFilePath);
 
-            $sendCommentService->sendDifferencesCommentsInCommit($cloverFile, $lastCommitCloverFile, $projectName, $buildRef, $gitlabUrl);
+            $sendCommentService->sendDifferencesCommentsInCommit($methodsProvider, $lastCommitMethodsProvider, $projectName, $buildRef, $gitlabUrl);
 
-            // TODO: open an issue if no merge request and failing build.
+
+            if ($config->isOpenIssue()) {
+                $message = new Message();
+
+                if ($codeCoverageProvider !== null) {
+                    $message->addCoverageMessage($codeCoverageProvider, $lastCommitCoverage);
+                } else {
+                    $output->writeln('Could not find clover file for code coverage analysis.');
+                }
+
+                if ($methodsProvider !== null) {
+                    $message->addDifferencesHtml($methodsProvider, $lastCommitMethodsProvider, $diffService, $buildRef, $gitlabUrl, $projectName);
+                } else {
+                    $output->writeln('Could not find clover file nor crap4j file for CRAP score analysis.');
+                }
+
+                $this->addFilesToMessage($message, $files, $output);
+
+                $project = new Project($projectName, $client);
+                $project->createIssue('Build failed', array(
+                    'description' => (string) $message,
+                    /*'assignee_id' => 2*/
+                ));
+            }
+
         } catch (BuildNotFoundException $e) {
             $output->writeln('Unable to find a previous build for this branch. Skipping adding comments inside the commit. '.$e->getMessage());
         }
@@ -215,43 +225,65 @@ class RunCommand extends Command
      */
     public function getMeasuresFromBranch(BuildService $buildService, string $projectName, string $targetBranch, string $cloverPath, string $crap4JPath) : array
     {
-        $tmpFile = tempnam(sys_get_temp_dir(), 'art').'.zip';
+        try {
+            $tmpFile = tempnam(sys_get_temp_dir(), 'art').'.zip';
 
-        $buildService->dumpArtifactFromBranch($projectName, $targetBranch, $tmpFile);
-        $zipFile = new \ZipArchive();
-        if ($zipFile->open($tmpFile)!==true) {
-            throw new \RuntimeException('Invalid ZIP archive '.$tmpFile);
+            $buildService->dumpArtifactFromBranch($projectName, $targetBranch, $tmpFile);
+            $zipFile = new \ZipArchive();
+            if ($zipFile->open($tmpFile)!==true) {
+                throw new \RuntimeException('Invalid ZIP archive '.$tmpFile);
+            }
+            $cloverFileString = $zipFile->getFromName($cloverPath);
+
+            $cloverFile = null;
+            if ($cloverFileString !== false) {
+                $cloverFile = CloverFile::fromString($cloverFileString, getcwd());
+            }
+
+            $crap4JString = $zipFile->getFromName($crap4JPath);
+
+            $crap4JFile = null;
+            if ($crap4JString !== false) {
+                $crap4JFile = Crap4JFile::fromString($crap4JString);
+            }
+
+            $methodsProvider = null;
+            $codeCoverageProvider = null;
+
+            if ($cloverFile !== null && $crap4JFile !== null) {
+                $methodsProvider = new CrapMethodMerger($cloverFile, $crap4JFile);
+                $codeCoverageProvider = $cloverFile;
+            } elseif ($cloverFile !== null) {
+                $methodsProvider = $cloverFile;
+                $codeCoverageProvider = $cloverFile;
+            } elseif ($crap4JFile !== null) {
+                $methodsProvider = $crap4JFile;
+            } else {
+                throw new \RuntimeException('Could not find nor clover file, neither crap4j file for analysis. Searched paths: '.$cloverFilePath.' and '.$crap4JFilePath);
+            }
+
+            return [$codeCoverageProvider, $methodsProvider];
+        } catch (\RuntimeException $e) {
+            if ($e->getCode() === 404) {
+                // We could not find a previous clover file in the master branch.
+                // Maybe this branch is the first to contain clover files?
+                // Let's deal with this by generating a fake "empty" clover file.
+                return [EmptyCloverFile::create(), EmptyCloverFile::create()];
+            } else {
+                throw $e;
+            }
         }
-        $cloverFileString = $zipFile->getFromName($cloverPath);
+    }
 
-        $cloverFile = null;
-        if ($cloverFileString !== false) {
-            $cloverFile = CloverFile::fromString($cloverFileString, getcwd());
+    private function addFilesToMessage(Message $message, array $files, OutputInterface $output) {
+        foreach ($files as $file) {
+            if (!file_exists($file)) {
+                $output->writeln('<error>Could not find file to send "'.$file.'". Skipping this file.</error>');
+                continue;
+            }
+
+            $message->addFile(new \SplFileInfo($file), $config->getGitlabUrl(), $projectName, $config->getGitlabBuildId());
         }
-
-        $crap4JString = $zipFile->getFromName($crap4JPath);
-
-        $crap4JFile = null;
-        if ($crap4JString !== false) {
-            $crap4JFile = Crap4JFile::fromString($crap4JString);
-        }
-
-        $methodsProvider = null;
-        $codeCoverageProvider = null;
-
-        if ($cloverFile !== null && $crap4JFile !== null) {
-            $methodsProvider = new CrapMethodMerger($cloverFile, $crap4JFile);
-            $codeCoverageProvider = $cloverFile;
-        } elseif ($cloverFile !== null) {
-            $methodsProvider = $cloverFile;
-            $codeCoverageProvider = $cloverFile;
-        } elseif ($crap4JFile !== null) {
-            $methodsProvider = $crap4JFile;
-        } else {
-            throw new \RuntimeException('Could not find nor clover file, neither crap4j file for analysis. Searched paths: '.$cloverFilePath.' and '.$crap4JFilePath);
-        }
-
-        return [$codeCoverageProvider, $methodsProvider];
     }
 }
 

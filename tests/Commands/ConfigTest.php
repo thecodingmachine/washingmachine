@@ -49,6 +49,10 @@ class ConfigTest extends \PHPUnit_Framework_TestCase
                 InputOption::VALUE_IS_ARRAY | InputOption::VALUE_REQUIRED,
                 'Text file to be sent in the merge request comments (can be used multiple times).',
                 []),
+            new InputOption('open-issue',
+                'i',
+                InputOption::VALUE_NONE,
+                'Opens an issue (if the build is not part of a merge request)')
         ]);
     }
 
@@ -205,5 +209,21 @@ class ConfigTest extends \PHPUnit_Framework_TestCase
 
         $config = new Config($input);
         $this->assertSame(['foo.txt'], $config->getFiles());
+    }
+
+    public function testOpenIssueTrue()
+    {
+        $input = new ArrayInput(array('--open-issue' => true), $this->getInputDefinition());
+
+        $config = new Config($input);
+        $this->assertTrue($config->isOpenIssue());
+    }
+
+    public function testOpenIssueFalse()
+    {
+        $input = new ArrayInput(array(), $this->getInputDefinition());
+
+        $config = new Config($input);
+        $this->assertFalse($config->isOpenIssue());
     }
 }
