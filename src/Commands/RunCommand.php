@@ -204,11 +204,15 @@ class RunCommand extends Command
 
                 $project = new Project($projectName, $client);
 
-                $authorId = $project->commit($buildRef)->author->id;
+                $commit = $project->commit($buildRef);
+
+                var_dump($commit);
+                var_dump($commit->author);
+                var_dump($commit->author->id);
 
                 $project->createIssue('Build failed', array(
                     'description' => (string) $message,
-                    'assignee_id' => $authorId
+                    'assignee_id' => $commit->author->id
                 ));
             }
 
