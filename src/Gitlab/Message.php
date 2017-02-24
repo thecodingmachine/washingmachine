@@ -62,7 +62,7 @@ class Message
     private function getDifferencesHtml(array $differences, string $commitId, string $gitlabUrl, string $projectName) : string
     {
         if (empty($differences)) {
-            return 'No meaningful differences in code complexity detected.';
+            return "No meaningful differences in code complexity detected.\n";
         }
 
         $tableTemplate = '<table>
@@ -122,11 +122,13 @@ class Message
         $text = str_replace('```', '\\```', $text);
         $text = str_replace('~~~', '\\~~~', $text);
 
-        $this->msg .= sprintf("<strong>%s</strong>\n", $file->getFilename());
+        $url = $this->getArtifactFileUrl($file->getFilename(), $gitlabUrl, $projectName, $buildId);
+
+        $this->msg .= sprintf("\n<strong>[%s](%s)</strong>\n", $file->getFilename(), $url);
         $this->msg .= sprintf("```\n%s\n%s\n```\n", $text, $isComplete?'':'...');
 
         if (!$isComplete) {
-            $this->msg .= sprintf('[Download complete file](%s)', $this->getArtifactFileUrl($file->getFilename(), $gitlabUrl, $projectName, $buildId));
+            $this->msg .= sprintf('[Download complete file](%s)', $url);
         }
     }
 
