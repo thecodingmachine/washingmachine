@@ -207,6 +207,8 @@ class RunCommand extends Command
                 $commitId = $buildService->getCommitId($projectName, $config->getGitlabBuildId());
 
                 $commit = new Commit($project, $commitId, $client);
+                var_dump($commit);
+                var_dump($commit->author);
 
                 $project->createIssue('Build failed', array(
                     'description' => (string) $message,
