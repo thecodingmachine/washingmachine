@@ -204,7 +204,7 @@ class RunCommand extends Command
 
                 $project = new Project($projectName, $client);
 
-                $commitId = $buildService->getCommitId($projectName, $buildRef);
+                $commitId = $buildService->getCommitId($projectName, $config->getGitlabBuildId());
 
                 $commit = new Commit($project, $commitId, $client);
 
