@@ -70,3 +70,25 @@ after_script:
 ```
 
 Notice that we need to make sure the PHPDbg extension for PHP is installed. Also, make sure that Xdebug is NOT enabled on your Docker instance. Xdebug can also return code coverage data but is less accurate than PHPDbg, leading to wrong CRAP score results.
+
+### Add extra data in the comment
+
+When the *washingmachine* adds a comment in your merge-request, you can ask it to add additional text.
+This text must be stored in a file.
+
+You simply do:
+
+```
+washingmachine run -f file_to_added_to_comments.txt
+```
+
+Of course, this file might be the output of a CI tool.
+
+The *washingmachine* will only display the first 50 lines of the file. If the file is longer, a link to download the file is added at the end of the comment.
+
+You can also add several files by repeating the "-f" option:
+
+```
+washingmachine run -f file1.txt -f file2.txt
+```
+

@@ -3,6 +3,7 @@ namespace TheCodingMachine\WashingMachine\Commands;
 
 use Gitlab\Client;
 use Gitlab\Exception\RuntimeException;
+use Gitlab\Model\Commit;
 use Gitlab\Model\Project;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -174,8 +175,7 @@ class RunCommand extends Command
 
         } catch (MergeRequestNotFoundException $e) {
             // If there is no merge request attached to this build, let's skip the merge request comment. We can still make some comments on the commit itself!
-
-            $output->writeln('It seems that this CI build is not part of a merge request. Skipping.');
+            $output->writeln('It seems that this CI build is not part of a merge request.');
         }
 
         try {
@@ -203,9 +203,14 @@ class RunCommand extends Command
                 $this->addFilesToMessage($message, $files, $output);
 
                 $project = new Project($projectName, $client);
+
+                $commitId = $buildService->getCommitId($projectName, $buildRef);
+
+                $commit = new Commit($project, $commitId, $client);
+
                 $project->createIssue('Build failed', array(
                     'description' => (string) $message,
-                    /*'assignee_id' => 2*/
+                    'assignee_id' => $commit->author->id
                 ));
             }
 
