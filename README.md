@@ -71,7 +71,7 @@ after_script:
 
 Notice that we need to make sure the PHPDbg extension for PHP is installed. Also, make sure that Xdebug is NOT enabled on your Docker instance. Xdebug can also return code coverage data but is less accurate than PHPDbg, leading to wrong CRAP score results.
 
-### Add extra data in the comment
+### Adding extra data in the comment
 
 When the *washingmachine* adds a comment in your merge-request, you can ask it to add additional text.
 This text must be stored in a file.
@@ -92,3 +92,16 @@ You can also add several files by repeating the "-f" option:
 washingmachine run -f file1.txt -f file2.txt
 ```
 
+### Opening an issue
+
+When a merge request is open, the *washingmachine* will post comments directly in the merge request.
+
+If no merge request exists, the *washingmachine* can open an issue in your Gitlab project.
+
+To open an issue, use the `--open-issue` option:
+
+```
+washingmachine run --open-issue
+```
+
+Tip: you typically want to add the `--open-issue` tag conditionally if a build fails. Also, the `--open-issue` is ignored if a merge request matches the build.
