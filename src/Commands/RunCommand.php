@@ -208,7 +208,7 @@ class RunCommand extends Command
                     'description' => (string) $message
                 ];
 
-                $userId = $this->getCommiterId($client, $projectName, $buildRef);
+                $userId = $this->getCommiterId($client, $project, $buildRef);
                 if ($userId !== null) {
                     $options['assignee_id'] = $userId;
                 }
