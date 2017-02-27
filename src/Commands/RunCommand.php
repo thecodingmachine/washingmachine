@@ -204,25 +204,44 @@ class RunCommand extends Command
 
                 $project = new Project($projectName, $client);
 
-                $commit = $project->commit($buildRef);
+                $options = [
+                    'description' => (string) $message
+                ];
 
+                $userId = $this->getCommiterId($client, $projectName, $buildRef);
+                if ($userId !== null) {
+                    $options['assignee_id'] = $userId;
+                }
 
-                var_dump($commit->author_email);
-                $users = $client->users->search($commit->author_email);
-                var_dump($users);
-
-
-
-                $project->createIssue('Build failed', array(
-                    'description' => (string) $message,
-                    'assignee_id' => $users[0]->id
-                ));
+                $project->createIssue('Build failed', $options);
             }
-
         } catch (BuildNotFoundException $e) {
             $output->writeln('Unable to find a previous build for this branch. Skipping adding comments inside the commit. '.$e->getMessage());
         }
+    }
 
+    /**
+     * Returns the user id of the committer.
+     *
+     * @param Client $client
+     * @param Project $project
+     * @param $commitRef
+     * @return int|null
+     */
+    private function getCommiterId(Client $client, Project $project, $commitRef)
+    {
+
+        $commit = $project->commit($commitRef);
+
+        $users = $client->users->search($commit->author_email);
+
+        foreach ($users as $user) {
+            if ($user['email'] === $commit->author_email) {
+                return $user['id'];
+            }
+        }
+
+        return null;
     }
 
     /**
