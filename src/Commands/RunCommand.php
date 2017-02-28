@@ -169,7 +169,7 @@ class RunCommand extends Command
                 $output->writeln('Could not find clover file nor crap4j file for CRAP score analysis.');
             }
 
-            $this->addFilesToMessage($message, $files, $output);
+            $this->addFilesToMessage($message, $files, $output, $config);
 
             $client->merge_requests->addComment($projectName, $mergeRequest['id'], (string) $message);
 
@@ -200,7 +200,7 @@ class RunCommand extends Command
                     $output->writeln('Could not find clover file nor crap4j file for CRAP score analysis.');
                 }
 
-                $this->addFilesToMessage($message, $files, $output);
+                $this->addFilesToMessage($message, $files, $output, $config);
 
                 $project = new Project($projectName, $client);
 
@@ -304,14 +304,14 @@ class RunCommand extends Command
         }
     }
 
-    private function addFilesToMessage(Message $message, array $files, OutputInterface $output) {
+    private function addFilesToMessage(Message $message, array $files, OutputInterface $output, Config $config) {
         foreach ($files as $file) {
             if (!file_exists($file)) {
                 $output->writeln('<error>Could not find file to send "'.$file.'". Skipping this file.</error>');
                 continue;
             }
 
-            $message->addFile(new \SplFileInfo($file), $config->getGitlabUrl(), $projectName, $config->getGitlabBuildId());
+            $message->addFile(new \SplFileInfo($file), $config->getGitlabUrl(), $config->getGitlabProjectName(), $config->getGitlabBuildId());
         }
     }
 }
