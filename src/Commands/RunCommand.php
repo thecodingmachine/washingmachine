@@ -288,7 +288,7 @@ class RunCommand extends Command
             } elseif ($crap4JFile !== null) {
                 $methodsProvider = $crap4JFile;
             } else {
-                throw new \RuntimeException('Could not find nor clover file, neither crap4j file for analysis. Searched paths: '.$cloverFilePath.' and '.$crap4JFilePath);
+                return [EmptyCloverFile::create(), EmptyCloverFile::create()];
             }
 
             return [$codeCoverageProvider, $methodsProvider];
