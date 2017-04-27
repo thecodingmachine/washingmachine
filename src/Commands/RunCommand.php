@@ -15,6 +15,7 @@ use TheCodingMachine\WashingMachine\Clover\CrapMethodFetcherInterface;
 use TheCodingMachine\WashingMachine\Clover\CrapMethodMerger;
 use TheCodingMachine\WashingMachine\Clover\DiffService;
 use TheCodingMachine\WashingMachine\Clover\EmptyCloverFile;
+use TheCodingMachine\WashingMachine\Git\GitRepository;
 use TheCodingMachine\WashingMachine\Gitlab\BuildNotFoundException;
 use TheCodingMachine\WashingMachine\Gitlab\BuildService;
 use TheCodingMachine\WashingMachine\Gitlab\MergeRequestNotFoundException;
@@ -155,7 +156,9 @@ class RunCommand extends Command
             $mergeRequest = $buildService->findMergeRequestByBuildRef($projectName, $buildRef);
 
 
-            list($previousCodeCoverageProvider, $previousMethodsProvider) = $this->getMeasuresFromBranch($buildService, $mergeRequest['target_project_id'], $mergeRequest['target_branch'], $cloverFilePath, $crap4JFilePath);
+            $lastCommonCommit = $this->findMergeBase($mergeRequest['target_branch']);
+            list($previousCodeCoverageProvider, $previousMethodsProvider) = $this->getMeasuresFromCommit($buildService, $mergeRequest['target_project_id'], $lastCommonCommit, $cloverFilePath, $crap4JFilePath);
+            //list($previousCodeCoverageProvider, $previousMethodsProvider) = $this->getMeasuresFromBranch($buildService, $mergeRequest['target_project_id'], $mergeRequest['target_branch'], $cloverFilePath, $crap4JFilePath);
 
             $message = new Message();
             if ($codeCoverageProvider !== null) {
@@ -262,36 +265,7 @@ class RunCommand extends Command
             if ($zipFile->open($tmpFile)!==true) {
                 throw new \RuntimeException('Invalid ZIP archive '.$tmpFile);
             }
-            $cloverFileString = $zipFile->getFromName($cloverPath);
-
-            $cloverFile = null;
-            if ($cloverFileString !== false) {
-                $cloverFile = CloverFile::fromString($cloverFileString, getcwd());
-            }
-
-            $crap4JString = $zipFile->getFromName($crap4JPath);
-
-            $crap4JFile = null;
-            if ($crap4JString !== false) {
-                $crap4JFile = Crap4JFile::fromString($crap4JString);
-            }
-
-            $methodsProvider = null;
-            $codeCoverageProvider = null;
-
-            if ($cloverFile !== null && $crap4JFile !== null) {
-                $methodsProvider = new CrapMethodMerger($cloverFile, $crap4JFile);
-                $codeCoverageProvider = $cloverFile;
-            } elseif ($cloverFile !== null) {
-                $methodsProvider = $cloverFile;
-                $codeCoverageProvider = $cloverFile;
-            } elseif ($crap4JFile !== null) {
-                $methodsProvider = $crap4JFile;
-            } else {
-                return [EmptyCloverFile::create(), EmptyCloverFile::create()];
-            }
-
-            return [$codeCoverageProvider, $methodsProvider];
+            return $this->getMeasuresFromZipFile($zipFile, $cloverPath, $crap4JPath);
         } catch (\RuntimeException $e) {
             if ($e->getCode() === 404) {
                 // We could not find a previous clover file in the master branch.
@@ -302,6 +276,77 @@ class RunCommand extends Command
                 throw $e;
             }
         }
+    }
+
+    /**
+     * Returns the last commit ID that is in common between current branch and passed branch.
+     *
+     * @param string $branchName
+     * @return string
+     */
+    private function findMergeBase(string $branchName) : string
+    {
+        $repo = new GitRepository(getcwd());
+        $currentBranchName = $repo->getCurrentBranchName();
+        return $repo->getMergeBase($currentBranchName, $branchName);
+    }
+
+    public function getMeasuresFromCommit(BuildService $buildService, string $projectName, string $commitId, string $cloverPath, string $crap4JPath) : array
+    {
+        try {
+            $tmpFile = tempnam(sys_get_temp_dir(), 'art').'.zip';
+
+            $buildRef = $this->getLatestBuildFromCommitId($projectName, $commitId);
+            $buildService->dumpArtifact($projectName, $buildRef, $tmpFile);
+            $zipFile = new \ZipArchive();
+            if ($zipFile->open($tmpFile)!==true) {
+                throw new \RuntimeException('Invalid ZIP archive '.$tmpFile);
+            }
+            return $this->getMeasuresFromZipFile($zipFile, $cloverPath, $crap4JPath);
+        } catch (\RuntimeException $e) {
+            if ($e->getCode() === 404) {
+                // We could not find a previous clover file in the give commit.
+                // Maybe this branch is the first to contain clover files?
+                // Let's deal with this by generating a fake "empty" clover file.
+                return [EmptyCloverFile::create(), EmptyCloverFile::create()];
+            } else {
+                throw $e;
+            }
+        }
+    }
+
+    private function getMeasuresFromZipFile(ZipArchive $zipFile, string $cloverPath, string $crap4JPath) : array
+    {
+        $cloverFileString = $zipFile->getFromName($cloverPath);
+
+        $cloverFile = null;
+        if ($cloverFileString !== false) {
+            $cloverFile = CloverFile::fromString($cloverFileString, getcwd());
+        }
+
+        $crap4JString = $zipFile->getFromName($crap4JPath);
+
+        $crap4JFile = null;
+        if ($crap4JString !== false) {
+            $crap4JFile = Crap4JFile::fromString($crap4JString);
+        }
+
+        $methodsProvider = null;
+        $codeCoverageProvider = null;
+
+        if ($cloverFile !== null && $crap4JFile !== null) {
+            $methodsProvider = new CrapMethodMerger($cloverFile, $crap4JFile);
+            $codeCoverageProvider = $cloverFile;
+        } elseif ($cloverFile !== null) {
+            $methodsProvider = $cloverFile;
+            $codeCoverageProvider = $cloverFile;
+        } elseif ($crap4JFile !== null) {
+            $methodsProvider = $crap4JFile;
+        } else {
+            return [EmptyCloverFile::create(), EmptyCloverFile::create()];
+        }
+
+        return [$codeCoverageProvider, $methodsProvider];
     }
 
     private function addFilesToMessage(Message $message, array $files, OutputInterface $output, Config $config) {
