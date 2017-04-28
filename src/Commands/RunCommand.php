@@ -315,7 +315,7 @@ class RunCommand extends Command
         }
     }
 
-    private function getMeasuresFromZipFile(ZipArchive $zipFile, string $cloverPath, string $crap4JPath) : array
+    private function getMeasuresFromZipFile(\ZipArchive $zipFile, string $cloverPath, string $crap4JPath) : array
     {
         $cloverFileString = $zipFile->getFromName($cloverPath);
 
