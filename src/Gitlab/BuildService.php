@@ -71,7 +71,7 @@ class BuildService
      * @return array
      * @throws BuildNotFoundException
      */
-    private function getLatestBuildFromCommitId(string $projectName, string $commitId, int $numIter = 0) : array
+    public function getLatestBuildFromCommitId(string $projectName, string $commitId, int $numIter = 0) : array
     {
         $builds = $this->client->repositories->commitBuilds($projectName, $commitId, ['failed', 'success']);
 

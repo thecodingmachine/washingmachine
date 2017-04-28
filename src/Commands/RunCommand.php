@@ -2,8 +2,6 @@
 namespace TheCodingMachine\WashingMachine\Commands;
 
 use Gitlab\Client;
-use Gitlab\Exception\RuntimeException;
-use Gitlab\Model\Commit;
 use Gitlab\Model\Project;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -11,7 +9,6 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use TheCodingMachine\WashingMachine\Clover\CloverFile;
 use TheCodingMachine\WashingMachine\Clover\Crap4JFile;
-use TheCodingMachine\WashingMachine\Clover\CrapMethodFetcherInterface;
 use TheCodingMachine\WashingMachine\Clover\CrapMethodMerger;
 use TheCodingMachine\WashingMachine\Clover\DiffService;
 use TheCodingMachine\WashingMachine\Clover\EmptyCloverFile;
@@ -155,8 +152,10 @@ class RunCommand extends Command
         try {
             $mergeRequest = $buildService->findMergeRequestByBuildRef($projectName, $buildRef);
 
+            $repo = new GitRepository(getcwd());
+            $lastCommonCommit = $repo->getMergeBase($mergeRequest['target_branch'], $buildRef);
 
-            $lastCommonCommit = $this->findMergeBase($mergeRequest['target_branch']);
+
             list($previousCodeCoverageProvider, $previousMethodsProvider) = $this->getMeasuresFromCommit($buildService, $mergeRequest['target_project_id'], $lastCommonCommit, $cloverFilePath, $crap4JFilePath);
             //list($previousCodeCoverageProvider, $previousMethodsProvider) = $this->getMeasuresFromBranch($buildService, $mergeRequest['target_project_id'], $mergeRequest['target_branch'], $cloverFilePath, $crap4JFilePath);
 
@@ -278,26 +277,13 @@ class RunCommand extends Command
         }
     }
 
-    /**
-     * Returns the last commit ID that is in common between current branch and passed branch.
-     *
-     * @param string $branchName
-     * @return string
-     */
-    private function findMergeBase(string $branchName) : string
-    {
-        $repo = new GitRepository(getcwd());
-        $currentBranchName = $repo->getCurrentBranchName();
-        return $repo->getMergeBase($currentBranchName, $branchName);
-    }
-
     public function getMeasuresFromCommit(BuildService $buildService, string $projectName, string $commitId, string $cloverPath, string $crap4JPath) : array
     {
         try {
             $tmpFile = tempnam(sys_get_temp_dir(), 'art').'.zip';
 
-            $buildRef = $this->getLatestBuildFromCommitId($projectName, $commitId);
-            $buildService->dumpArtifact($projectName, $buildRef, $tmpFile);
+            $build = $buildService->getLatestBuildFromCommitId($projectName, $commitId);
+            $buildService->dumpArtifact($projectName, $build['id'], $tmpFile);
             $zipFile = new \ZipArchive();
             if ($zipFile->open($tmpFile)!==true) {
                 throw new \RuntimeException('Invalid ZIP archive '.$tmpFile);
