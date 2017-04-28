@@ -149,6 +149,8 @@ class RunCommand extends Command
 
         $buildService = new BuildService($client);
 
+        $inMergeRequest = false;
+
         try {
             $mergeRequest = $buildService->findMergeRequestByBuildRef($projectName, $buildRef);
 
@@ -175,6 +177,7 @@ class RunCommand extends Command
 
             $client->merge_requests->addComment($projectName, $mergeRequest['id'], (string) $message);
 
+            $inMergeRequest = true;
         } catch (MergeRequestNotFoundException $e) {
             // If there is no merge request attached to this build, let's skip the merge request comment. We can still make some comments on the commit itself!
             $output->writeln('It seems that this CI build is not part of a merge request.');
@@ -187,7 +190,7 @@ class RunCommand extends Command
             $sendCommentService->sendDifferencesCommentsInCommit($methodsProvider, $lastCommitMethodsProvider, $projectName, $buildRef, $gitlabUrl);
 
 
-            if ($config->isOpenIssue()) {
+            if ($config->isOpenIssue() && !$inMergeRequest) {
                 $message = new Message();
 
                 if ($codeCoverageProvider !== null) {
