@@ -12,4 +12,11 @@ class GitRepository extends \Cz\Git\GitRepository
 
         return $results[0];
     }
+
+    public function getLatestCommitForBranch(string $branch) : string
+    {
+        $results = $this->extractFromCommand('git log -n 1 --pretty=format:"%H" ' . escapeshellarg($branch));
+
+        return $results[0];
+    }
 }

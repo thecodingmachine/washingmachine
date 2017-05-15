@@ -155,8 +155,8 @@ class RunCommand extends Command
             $mergeRequest = $buildService->findMergeRequestByBuildRef($projectName, $buildRef);
 
             $repo = new GitRepository(getcwd());
-            $repo->fetch();
-            $lastCommonCommit = $repo->getMergeBase($mergeRequest['target_branch'], $buildRef);
+            $targetCommit = $repo->getLatestCommitForBranch($mergeRequest['target_branch']);
+            $lastCommonCommit = $repo->getMergeBase($targetCommit, $buildRef);
 
 
             list($previousCodeCoverageProvider, $previousMethodsProvider) = $this->getMeasuresFromCommit($buildService, $mergeRequest['target_project_id'], $lastCommonCommit, $cloverFilePath, $crap4JFilePath);
