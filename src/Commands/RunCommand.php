@@ -155,6 +155,7 @@ class RunCommand extends Command
             $mergeRequest = $buildService->findMergeRequestByBuildRef($projectName, $buildRef);
 
             $repo = new GitRepository(getcwd());
+            $repo->fetch();
             $lastCommonCommit = $repo->getMergeBase($mergeRequest['target_branch'], $buildRef);
 
 
