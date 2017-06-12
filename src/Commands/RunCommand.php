@@ -58,12 +58,12 @@ class RunCommand extends Command
                 InputOption::VALUE_REQUIRED,
                 'The Gitlab project name (in the form "group/name"). If not specified, it is deduced from the CI_PROJECT_DIR environment variable.',
                 null)
-            ->addOption('gitlab-build-ref',
+            ->addOption('commit-sha',
                 'r',
                 InputOption::VALUE_REQUIRED,
-                'The Gitlab CI build reference. If not specified, it is deduced from the CI_BUILD_REF environment variable.',
+                'The commit SHA. If not specified, it is deduced from the CI_COMMIT_SHA environment variable.',
                 null)
-            ->addOption('gitlab-build-id',
+            ->addOption('gitlab-job-id',
                 'b',
                 InputOption::VALUE_REQUIRED,
                 'The Gitlab CI build id. If not specified, it is deduced from the CI_BUILD_ID environment variable.',
@@ -132,7 +132,7 @@ class RunCommand extends Command
 
         $projectName = $config->getGitlabProjectName();
 
-        $buildRef = $config->getGitlabBuildRef();
+        $commitSha = $config->getCommitSha();
 
         $currentBranchName = $config->getCurrentBranchName();
 
@@ -143,7 +143,7 @@ class RunCommand extends Command
 
         $sendCommentService = new SendCommentService($client, $diffService);
 
-        // From CI_BUILD_REF, we can get the commit ( -> project -> build -> commit )
+        // From CI_COMMIT_SHA, we can get the commit ( -> project -> build -> commit )
         // From the merge_requests API, we can get the list of commits for a single merge request
         // Hence, we can find the merge_request matching a build!
 
@@ -152,11 +152,11 @@ class RunCommand extends Command
         $inMergeRequest = false;
 
         try {
-            $mergeRequest = $buildService->findMergeRequestByBuildRef($projectName, $buildRef);
+            $mergeRequest = $buildService->findMergeRequestByCommitSha($projectName, $commitSha);
 
             $repo = new GitRepository(getcwd());
             $targetCommit = $repo->getLatestCommitForBranch('origin/'.$mergeRequest['target_branch']);
-            $lastCommonCommit = $repo->getMergeBase($targetCommit, $buildRef);
+            $lastCommonCommit = $repo->getMergeBase($targetCommit, $commitSha);
 
 
             list($previousCodeCoverageProvider, $previousMethodsProvider) = $this->getMeasuresFromCommit($buildService, $mergeRequest['target_project_id'], $lastCommonCommit, $cloverFilePath, $crap4JFilePath);
@@ -169,7 +169,7 @@ class RunCommand extends Command
                 $output->writeln('Could not find clover file for code coverage analysis.');
             }
             if ($methodsProvider !== null) {
-                $message->addDifferencesHtml($methodsProvider, $previousMethodsProvider, $diffService, $buildRef, $gitlabUrl, $projectName);
+                $message->addDifferencesHtml($methodsProvider, $previousMethodsProvider, $diffService, $commitSha, $gitlabUrl, $projectName);
             } else {
                 $output->writeln('Could not find clover file nor crap4j file for CRAP score analysis.');
             }
@@ -188,7 +188,7 @@ class RunCommand extends Command
             $targetProjectId = $mergeRequest['target_project_id'] ?? $projectName;
             list($lastCommitCoverage, $lastCommitMethodsProvider) = $this->getMeasuresFromBranch($buildService, $targetProjectId, $currentBranchName, $cloverFilePath, $crap4JFilePath);
 
-            $sendCommentService->sendDifferencesCommentsInCommit($methodsProvider, $lastCommitMethodsProvider, $projectName, $buildRef, $gitlabUrl);
+            $sendCommentService->sendDifferencesCommentsInCommit($methodsProvider, $lastCommitMethodsProvider, $projectName, $commitSha, $gitlabUrl);
 
 
             if ($config->isOpenIssue() && !$inMergeRequest) {
@@ -201,7 +201,7 @@ class RunCommand extends Command
                 }
 
                 if ($methodsProvider !== null) {
-                    $message->addDifferencesHtml($methodsProvider, $lastCommitMethodsProvider, $diffService, $buildRef, $gitlabUrl, $projectName);
+                    $message->addDifferencesHtml($methodsProvider, $lastCommitMethodsProvider, $diffService, $commitSha, $gitlabUrl, $projectName);
                 } else {
                     $output->writeln('Could not find clover file nor crap4j file for CRAP score analysis.');
                 }
@@ -214,7 +214,7 @@ class RunCommand extends Command
                     'description' => (string) $message
                 ];
 
-                $userId = $this->getCommiterId($client, $project, $buildRef);
+                $userId = $this->getCommiterId($client, $project, $commitSha);
                 if ($userId !== null) {
                     $options['assignee_id'] = $userId;
                 }
