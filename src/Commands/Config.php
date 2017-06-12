@@ -48,9 +48,12 @@ class Config
     {
         $gitlabUrl = $this->input->getOption('gitlab-url');
         if ($gitlabUrl === null) {
-            $ciProjectUrl = getenv('CI_BUILD_REPO');
+            $ciProjectUrl = getenv('CI_REPOSITORY_URL');
             if ($ciProjectUrl === false) {
-                throw new \RuntimeException('Could not find the Gitlab URL in the "CI_BUILD_REPO" environment variable (usually set by Gitlab CI). Either set this environment variable or pass the URL via the --gitlab-url command line option.');
+                $ciProjectUrl = getenv('CI_BUILD_REPO');
+                if ($ciProjectUrl === false) {
+                    throw new \RuntimeException('Could not find the Gitlab URL in the "CI_REPOSITORY_URL" (Gitlab 9+) or "CI_BUILD_REPO" (Gitlab 8.x) environment variable (usually set by Gitlab CI). Either set this environment variable or pass the URL via the --gitlab-url command line option.');
+                }
             }
             $parsed_url = parse_url($ciProjectUrl);
             $scheme   = isset($parsed_url['scheme']) ? $parsed_url['scheme'] . '://' : '';
@@ -79,25 +82,33 @@ class Config
         return $projectName;
     }
 
-    public function getGitlabBuildRef() : string
+    public function getCommitSha() : string
     {
-        $buildRef = $this->input->getOption('gitlab-build-ref');
-        if ($buildRef === null) {
-            $buildRef = getenv('CI_BUILD_REF');
-            if ($buildRef === false) {
-                throw new \RuntimeException('Could not find the Gitlab build reference in the "CI_BUILD_REF" environment variable (usually set by Gitlab CI). Either set this environment variable or pass the build reference via the --gitlab-build-ref command line option.');
+        $commitSha = $this->input->getOption('commit-sha');
+
+        if ($commitSha === null) {
+            $commitSha = getenv('CI_COMMIT_SHA');
+            if ($commitSha === false) {
+                $commitSha = getenv('CI_BUILD_REF');
+                if ($commitSha === false) {
+                    throw new \RuntimeException('Could not find the Gitlab build reference in the "CI_COMMIT_SHA" (Gitlab 9+) or "CI_BUILD_REF" (Gitlab 8.x) environment variable (usually set by Gitlab CI). Either set this environment variable or pass the build reference via the --commit-sha command line option.');
+                }
             }
         }
-        return $buildRef;
+
+        return $commitSha;
     }
 
     public function getGitlabBuildId() : int
     {
-        $buildId = $this->input->getOption('gitlab-build-id');
+        $buildId = $this->input->getOption('gitlab-job-id');
         if ($buildId === null) {
             $buildId = getenv('CI_BUILD_ID');
             if ($buildId === false) {
-                throw new \RuntimeException('Could not find the Gitlab build id in the "CI_BUILD_ID" environment variable (usually set by Gitlab CI). Either set this environment variable or pass the build id via the --gitlab-build-id command line option.');
+                $buildId = getenv('CI_JOB_ID');
+                if ($buildId === false) {
+                    throw new \RuntimeException('Could not find the Gitlab build id in the "CI_JOB_ID" (Gitlab 9+) or "CI_BUILD_ID" (Gitlab 8.x) environment variable (usually set by Gitlab CI). Either set this environment variable or pass the build id via the --gitlab-job-id command line option.');
+                }
             }
         }
         return $buildId;
@@ -109,7 +120,14 @@ class Config
      */
     public function getCurrentBranchName() : string
     {
+        // Gitlab 8.x
         $branchName = getenv('CI_BUILD_REF_NAME');
+        if ($branchName !== false) {
+            return $branchName;
+        }
+
+        // Gitlab 9+
+        $branchName = getenv('CI_COMMIT_REF_NAME');
         if ($branchName !== false) {
             return $branchName;
         }

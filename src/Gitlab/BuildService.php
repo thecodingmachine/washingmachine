@@ -34,11 +34,11 @@ class BuildService
 
     /**
      * @param string $projectName
-     * @param string $buildRef
+     * @param string $commitSha
      * @return array The merge request object
      * @throws MergeRequestNotFoundException
      */
-    public function findMergeRequestByBuildRef(string $projectName, string $buildRef) : array
+    public function findMergeRequestByCommitSha(string $projectName, string $commitSha) : array
     {
         // Find in the last 50 merge requests (since our build was triggered recently, it should definitely be there)
         $mergeRequests = $this->client->merge_requests->all($projectName, 1, 50, 'updated_at', 'desc');
@@ -48,12 +48,12 @@ class BuildService
             // Let's only return this PR if the returned commit is the FIRST one (otherwise, the commit ID is on an outdated version of the PR)
 
             // Note: strangely, the "id" column of the commit is the build ref and not the commit id... weird!
-            if ($commits[0]['id'] === $buildRef) {
+            if ($commits[0]['id'] === $commitSha) {
                 return $mergeRequest;
             }
         }
 
-        throw new MergeRequestNotFoundException('Could not find a PR (in the 50 last PRs) whose last commit/buildRef ID is '.$buildRef);
+        throw new MergeRequestNotFoundException('Could not find a PR (in the 50 last PRs) whose last commit/buildRef ID is '.$commitSha);
     }
 
     public function getLatestCommitIdFromBranch(string $projectName, string $branchName) : string

@@ -34,12 +34,12 @@ class ConfigTest extends \PHPUnit_Framework_TestCase
                 InputOption::VALUE_REQUIRED,
                 'The Gitlab project name (in the form "group/name"). If not specified, it is deduced from the CI_PROJECT_DIR environment variable.',
                 null),
-            new InputOption('gitlab-build-ref',
+            new InputOption('commit-sha',
                 'r',
                 InputOption::VALUE_REQUIRED,
-                'The Gitlab CI build reference. If not specified, it is deduced from the CI_BUILD_REF environment variable.',
+                'The commit SHA. If not specified, it is deduced from the CI_COMMIT_SHA environment variable.',
                 null),
-            new InputOption('gitlab-build-id',
+            new InputOption('gitlab-job-id',
                 'b',
                 InputOption::VALUE_REQUIRED,
                 'The Gitlab CI build id. If not specified, it is deduced from the CI_BUILD_ID environment variable.',
@@ -155,25 +155,37 @@ class ConfigTest extends \PHPUnit_Framework_TestCase
         putenv('CI_BUILD_REF=DEADBEEFDEADBEEF');
         $input = new ArrayInput([], $this->getInputDefinition());
         $config = new Config($input);
-        $this->assertSame('DEADBEEFDEADBEEF', $config->getGitlabBuildRef());
+        $this->assertSame('DEADBEEFDEADBEEF', $config->getCommitSha());
+    }
+
+    public function testGitlab9BuildRefFromEnv()
+    {
+        putenv('CI_BUILD_REF');
+        putenv('CI_COMMIT_SHA=DEADBEEFDEADBEEF');
+        $input = new ArrayInput([], $this->getInputDefinition());
+        $config = new Config($input);
+        $this->assertSame('DEADBEEFDEADBEEF', $config->getCommitSha());
     }
 
     public function testGitlabBuildRefFromParam()
     {
-        $input = new ArrayInput(array('--gitlab-build-ref' => 'DEADBEEFDEADBEEF2'), $this->getInputDefinition());
+        putenv('CI_BUILD_REF');
+        putenv('CI_COMMIT_SHA');
+        $input = new ArrayInput(array('--commit-sha' => 'DEADBEEFDEADBEEF2'), $this->getInputDefinition());
 
         $config = new Config($input);
-        $this->assertSame('DEADBEEFDEADBEEF2', $config->getGitlabBuildRef());
+        $this->assertSame('DEADBEEFDEADBEEF2', $config->getCommitSha());
     }
 
     public function testNoGitlabBuildRef()
     {
         putenv('CI_BUILD_REF');
+        putenv('CI_COMMIT_SHA');
         $input = new ArrayInput([], $this->getInputDefinition());
 
         $config = new Config($input);
         $this->expectException(\RuntimeException::class);
-        $config->getGitlabBuildRef();
+        $config->getCommitSha();
     }
 
     public function testGitlabBuildIdFromEnv()
@@ -184,9 +196,21 @@ class ConfigTest extends \PHPUnit_Framework_TestCase
         $this->assertSame(42, $config->getGitlabBuildId());
     }
 
+    public function testGitlabJobIdFromEnv()
+    {
+        putenv('CI_BUILD_ID');
+        putenv('CI_JOB_ID=42');
+        $input = new ArrayInput([], $this->getInputDefinition());
+        $config = new Config($input);
+        $this->assertSame(42, $config->getGitlabBuildId());
+    }
+
     public function testGitlabBuildIdFromParam()
     {
-        $input = new ArrayInput(array('--gitlab-build-id' => '42'), $this->getInputDefinition());
+        putenv('CI_BUILD_ID');
+        putenv('CI_JOB_ID');
+
+        $input = new ArrayInput(array('--gitlab-job-id' => '42'), $this->getInputDefinition());
 
         $config = new Config($input);
         $this->assertSame(42, $config->getGitlabBuildId());
