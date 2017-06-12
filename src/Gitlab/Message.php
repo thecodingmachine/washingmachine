@@ -90,7 +90,7 @@ class Message
             } else {
                 $differenceCol = '<em>New</em>';
                 // For new rows, let's display an emoji
-                $crapScoreEmoji = $crapScoreEmojiGenerator->getEmoji($difference->getCrapScore());
+                $crapScoreEmoji = ' '.$crapScoreEmojiGenerator->getEmoji($difference->getCrapScore());
             }
 
             if ($difference->getFile() !== null) {
