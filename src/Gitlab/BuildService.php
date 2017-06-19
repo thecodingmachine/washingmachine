@@ -115,16 +115,16 @@ class BuildService
         }
     }
 
-    public function dumpArtifact(string $projectName, string $buildRef, string $file)
+    public function dumpArtifact(string $projectName, string $buildRef, string $jobName, string $file)
     {
-        $artifactContent = $this->client->projects->buildArtifacts($projectName, $buildRef);
+        $artifactContent = $this->client->jobs->artifactsByRefName($projectName, $buildRef, $jobName);
         $filesystem = new Filesystem();
         $filesystem->dumpFile($file, $artifactContent);
     }
 
-    public function dumpArtifactFromBranch(string $projectName, string $branchName, string $file)
+    public function dumpArtifactFromBranch(string $projectName, string $branchName, string $jobStage, string $file)
     {
         $build = $this->getLatestBuildFromBranch($projectName, $branchName);
-        $this->dumpArtifact($projectName, $build['id'], $file);
+        $this->dumpArtifact($projectName, $build['id'], $jobStage, $file);
     }
 }

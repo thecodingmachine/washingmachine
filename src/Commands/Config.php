@@ -99,6 +99,20 @@ class Config
         return $commitSha;
     }
 
+    public function getJobStage() : string
+    {
+        $commitSha = $this->input->getOption('job-stage');
+
+        if ($commitSha === null) {
+            $commitSha = getenv('CI_JOB_STAGE');
+            if ($commitSha === false) {
+                throw new \RuntimeException('Could not find the Gitlab job stage in the "CI_JOB_STAGE" (Gitlab 9+) environment variable (usually set by Gitlab CI). Either set this environment variable or pass the job stage via the --job_stage command line option.');
+            }
+        }
+
+        return $commitSha;
+    }
+
     public function getGitlabBuildId() : int
     {
         $buildId = $this->input->getOption('gitlab-job-id');
