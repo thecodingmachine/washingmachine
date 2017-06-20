@@ -31,10 +31,10 @@ class EmojiGenerator
     {
         $emojiMap = [
             1 => ':innocent:',
-            10 => ':neutral_face:',
-            20 => ':sweat:',
-            30 => ':slight_frown:',
-            100 => ':sob:',
+            31 => ':neutral_face:',
+            50 => ':sweat:',
+            80 => ':slight_frown:',
+            120 => ':sob:',
             300 => ':scream:',
             600 => ':radioactive:',
             900 => ':skull_crossbones:'
