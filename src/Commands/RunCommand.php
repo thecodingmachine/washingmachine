@@ -66,7 +66,12 @@ class RunCommand extends Command
             ->addOption('gitlab-job-id',
                 'b',
                 InputOption::VALUE_REQUIRED,
-                'The Gitlab CI build id. If not specified, it is deduced from the CI_BUILD_ID environment variable.',
+                'The Gitlab CI build/job id. If not specified, it is deduced from the CI_BUILD_ID environment variable.',
+                null)
+            ->addOption('job-stage',
+                's',
+                InputOption::VALUE_REQUIRED,
+                'The Gitlab CI job stage. If not specified, it is deduced from the CI_JOB_ID environment variable (only available in Gitlab 9+).',
                 null)
             ->addOption('file',
                 'f',
@@ -159,7 +164,7 @@ class RunCommand extends Command
             $lastCommonCommit = $repo->getMergeBase($targetCommit, $commitSha);
 
 
-            list($previousCodeCoverageProvider, $previousMethodsProvider) = $this->getMeasuresFromCommit($buildService, $mergeRequest['target_project_id'], $lastCommonCommit, $cloverFilePath, $crap4JFilePath);
+            list($previousCodeCoverageProvider, $previousMethodsProvider) = $this->getMeasuresFromCommit($buildService, $mergeRequest['target_project_id'], $lastCommonCommit, $cloverFilePath, $crap4JFilePath, $config->getJobStage());
             //list($previousCodeCoverageProvider, $previousMethodsProvider) = $this->getMeasuresFromBranch($buildService, $mergeRequest['target_project_id'], $mergeRequest['target_branch'], $cloverFilePath, $crap4JFilePath);
 
             $message = new Message();
@@ -186,7 +191,7 @@ class RunCommand extends Command
 
         try {
             $targetProjectId = $mergeRequest['target_project_id'] ?? $projectName;
-            list($lastCommitCoverage, $lastCommitMethodsProvider) = $this->getMeasuresFromBranch($buildService, $targetProjectId, $currentBranchName, $cloverFilePath, $crap4JFilePath);
+            list($lastCommitCoverage, $lastCommitMethodsProvider) = $this->getMeasuresFromBranch($buildService, $targetProjectId, $currentBranchName, $cloverFilePath, $crap4JFilePath, $config->getJobStage());
 
             $sendCommentService->sendDifferencesCommentsInCommit($methodsProvider, $lastCommitMethodsProvider, $projectName, $commitSha, $gitlabUrl);
 
@@ -258,12 +263,12 @@ class RunCommand extends Command
      * @param string $crap4JPath
      * @return array First element: code coverage, second element: list of methods.
      */
-    public function getMeasuresFromBranch(BuildService $buildService, string $projectName, string $targetBranch, string $cloverPath, string $crap4JPath) : array
+    public function getMeasuresFromBranch(BuildService $buildService, string $projectName, string $targetBranch, string $cloverPath, string $crap4JPath, string $jobStage) : array
     {
         try {
             $tmpFile = tempnam(sys_get_temp_dir(), 'art').'.zip';
 
-            $buildService->dumpArtifactFromBranch($projectName, $targetBranch, $tmpFile);
+            $buildService->dumpArtifactFromBranch($projectName, $targetBranch, $jobStage, $tmpFile);
             $zipFile = new \ZipArchive();
             if ($zipFile->open($tmpFile)!==true) {
                 throw new \RuntimeException('Invalid ZIP archive '.$tmpFile);
@@ -281,13 +286,13 @@ class RunCommand extends Command
         }
     }
 
-    public function getMeasuresFromCommit(BuildService $buildService, string $projectName, string $commitId, string $cloverPath, string $crap4JPath) : array
+    public function getMeasuresFromCommit(BuildService $buildService, string $projectName, string $commitId, string $cloverPath, string $crap4JPath, string $jobStage) : array
     {
         try {
             $tmpFile = tempnam(sys_get_temp_dir(), 'art').'.zip';
 
             $build = $buildService->getLatestBuildFromCommitId($projectName, $commitId);
-            $buildService->dumpArtifact($projectName, $build['id'], $tmpFile);
+            $buildService->dumpArtifact($projectName, $build['id'], $jobStage, $tmpFile);
             $zipFile = new \ZipArchive();
             if ($zipFile->open($tmpFile)!==true) {
                 throw new \RuntimeException('Invalid ZIP archive '.$tmpFile);

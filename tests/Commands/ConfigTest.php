@@ -44,6 +44,11 @@ class ConfigTest extends \PHPUnit_Framework_TestCase
                 InputOption::VALUE_REQUIRED,
                 'The Gitlab CI build id. If not specified, it is deduced from the CI_BUILD_ID environment variable.',
                 null),
+            new InputOption('job-stage',
+                's',
+                InputOption::VALUE_REQUIRED,
+                'The Gitlab CI job stage. If not specified, it is deduced from the CI_JOB_ID environment variable (only available in Gitlab 9+).',
+                null),
             new InputOption('file',
                 'f',
                 InputOption::VALUE_IS_ARRAY | InputOption::VALUE_REQUIRED,
@@ -226,6 +231,36 @@ class ConfigTest extends \PHPUnit_Framework_TestCase
         $config->getGitlabBuildId();
     }
 
+    public function testGitlabJobStageFromParam()
+    {
+        putenv('CI_JOB_STAGE');
+
+        $input = new ArrayInput(array('--job-stage' => 'test'), $this->getInputDefinition());
+
+        $config = new Config($input);
+        $this->assertSame('test', $config->getJobStage());
+    }
+
+    public function testGitlabJobStageFromEnv()
+    {
+        putenv('CI_JOB_STAGE=test2');
+
+        $input = new ArrayInput([], $this->getInputDefinition());
+
+        $config = new Config($input);
+        $this->assertSame('test2', $config->getJobStage());
+    }
+
+    public function testNoGitlabJobStage()
+    {
+        putenv('CI_JOB_STAGE');
+
+        $input = new ArrayInput([], $this->getInputDefinition());
+
+        $config = new Config($input);
+        $this->expectException(\RuntimeException::class);
+        $this->assertSame('test2', $config->getJobStage());
+    }
 
     public function testFile()
     {

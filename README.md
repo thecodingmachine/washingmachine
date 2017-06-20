@@ -2,9 +2,9 @@
 [![Total Downloads](https://poser.pugx.org/thecodingmachine/washingmachine/downloads)](https://packagist.org/packages/thecodingmachine/washingmachine)
 [![Latest Unstable Version](https://poser.pugx.org/thecodingmachine/washingmachine/v/unstable)](https://packagist.org/packages/thecodingmachine/washingmachine)
 [![License](https://poser.pugx.org/thecodingmachine/washingmachine/license)](https://packagist.org/packages/thecodingmachine/washingmachine)
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/thecodingmachine/washingmachine/badges/quality-score.png?b=1.2)](https://scrutinizer-ci.com/g/thecodingmachine/washingmachine/?branch=1.2)
-[![Build Status](https://travis-ci.org/thecodingmachine/washingmachine.svg?branch=1.2)](https://travis-ci.org/thecodingmachine/washingmachine)
-[![Coverage Status](https://coveralls.io/repos/thecodingmachine/washingmachine/badge.svg?branch=1.2&service=github)](https://coveralls.io/github/thecodingmachine/washingmachine?branch=1.2)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/thecodingmachine/washingmachine/badges/quality-score.png?b=1.3)](https://scrutinizer-ci.com/g/thecodingmachine/washingmachine/?branch=1.3)
+[![Build Status](https://travis-ci.org/thecodingmachine/washingmachine.svg?branch=1.3)](https://travis-ci.org/thecodingmachine/washingmachine)
+[![Coverage Status](https://coveralls.io/repos/thecodingmachine/washingmachine/badge.svg?branch=1.3&service=github)](https://coveralls.io/github/thecodingmachine/washingmachine?branch=1.3)
 
 
 # Washing machine
@@ -57,17 +57,34 @@ Now, we need to install the *washingmachine*, and get it to run.
 
 `.gitlab-ci.yml`
 ```
-before_script:
- - composer global require 'thecodingmachine/washingmachine'
+image: php:7.0
+
+test:
+  before_script:
+   - cd /root && composer create-project thecodingmachine/washingmachine washingmachine ^1.2
  
-script:
- - phpdbg -qrr vendor/bin/phpunit
+  script:
+   - phpdbg -qrr vendor/bin/phpunit
  
-after_script:
- - /root/.composer/vendor/bin/washingmachine run -v
+  after_script:
+   - /root/washingmachine/washingmachine run -v
 ```
 
 Notice that we need to make sure the PHPDbg extension for PHP is installed. Also, make sure that Xdebug is NOT enabled on your Docker instance. Xdebug can also return code coverage data but is less accurate than PHPDbg, leading to wrong CRAP score results.
+
+### Supported Gitlab versions
+
+Gitlab 8+ is supported.
+
+- The washingmachine v1.0 => v1.2 has support for Gitlab 8.
+- The washingmachine v1.2+ has support for Gitlab 8 and 9.
+
+Starting with v1.3, we use some features only available in Gitlab 9.
+You can still run the washingmachine on Gitlab 8.10+, but you will need to fill the `job_stage` parameters when program is run:
+ 
+    /root/washingmachine/washingmachine run --job-stage=test
+ 
+THe 'job_stage' parameter is the name of the stage in your `gitlab-ci.yml` file.
 
 ### Adding extra data in the comment
 
