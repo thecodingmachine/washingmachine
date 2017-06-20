@@ -2,9 +2,9 @@
 [![Total Downloads](https://poser.pugx.org/thecodingmachine/washingmachine/downloads)](https://packagist.org/packages/thecodingmachine/washingmachine)
 [![Latest Unstable Version](https://poser.pugx.org/thecodingmachine/washingmachine/v/unstable)](https://packagist.org/packages/thecodingmachine/washingmachine)
 [![License](https://poser.pugx.org/thecodingmachine/washingmachine/license)](https://packagist.org/packages/thecodingmachine/washingmachine)
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/thecodingmachine/washingmachine/badges/quality-score.png?b=1.2)](https://scrutinizer-ci.com/g/thecodingmachine/washingmachine/?branch=1.2)
-[![Build Status](https://travis-ci.org/thecodingmachine/washingmachine.svg?branch=1.2)](https://travis-ci.org/thecodingmachine/washingmachine)
-[![Coverage Status](https://coveralls.io/repos/thecodingmachine/washingmachine/badge.svg?branch=1.2&service=github)](https://coveralls.io/github/thecodingmachine/washingmachine?branch=1.2)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/thecodingmachine/washingmachine/badges/quality-score.png?b=1.3)](https://scrutinizer-ci.com/g/thecodingmachine/washingmachine/?branch=1.3)
+[![Build Status](https://travis-ci.org/thecodingmachine/washingmachine.svg?branch=1.3)](https://travis-ci.org/thecodingmachine/washingmachine)
+[![Coverage Status](https://coveralls.io/repos/thecodingmachine/washingmachine/badge.svg?branch=1.3&service=github)](https://coveralls.io/github/thecodingmachine/washingmachine?branch=1.3)
 
 
 # Washing machine
