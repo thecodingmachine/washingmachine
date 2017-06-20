@@ -84,7 +84,7 @@ You can still run the washingmachine on Gitlab 8.10+, but you will need to fill 
  
     /root/washingmachine/washingmachine run --job-stage=test
  
-THe 'job_stage' parameter is the name of the stage in your `gitlab-ci.yml` file.
+The 'job_stage' parameter is the name of the stage in your `gitlab-ci.yml` file.
 
 ### Adding extra data in the comment
 
