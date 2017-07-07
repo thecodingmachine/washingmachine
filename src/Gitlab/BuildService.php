@@ -1,6 +1,8 @@
 <?php
 namespace TheCodingMachine\WashingMachine\Gitlab;
 use Gitlab\Client;
+use GuzzleHttp\Psr7\Stream;
+use GuzzleHttp\Psr7\StreamWrapper;
 use Symfony\Component\Filesystem\Filesystem;
 
 /**
@@ -118,8 +120,11 @@ class BuildService
     public function dumpArtifact(string $projectName, string $buildRef, string $jobName, string $file)
     {
         $artifactContent = $this->client->jobs->artifactsByRefName($projectName, $buildRef, $jobName);
+
+        $stream = StreamWrapper::getResource($artifactContent);
+
         $filesystem = new Filesystem();
-        $filesystem->dumpFile($file, $artifactContent);
+        $filesystem->dumpFile($file, $stream);
     }
 
     public function dumpArtifactFromBranch(string $projectName, string $branchName, string $jobStage, string $file)
