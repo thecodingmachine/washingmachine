@@ -141,7 +141,7 @@ class RunCommand extends Command
 
         $currentBranchName = $config->getCurrentBranchName();
 
-        $client = new Client($gitlabApiUrl);
+        $client = Client::create($gitlabApiUrl);
         $client->authenticate($gitlabApiToken);
 
         $diffService = new DiffService(1, 20);
