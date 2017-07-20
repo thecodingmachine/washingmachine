@@ -29,7 +29,11 @@ Got it?
 
 Now, we need to add this token as a "secret variable" of your project (so the CI script can modify the merge request comments):
 
-Go to your project page in Gitlab: **Settings ➔ Variables ➔ Add variable**
+Go to your project page in Gitlab.
+
+In Gitlab 8 > **Settings ➔ Variables ➔ Add variable**
+In Gitlab 9+ > **Settings ➔ CI/CD Pipelines ➔ Secret Variables**
+
 
 - Key: `GITLAB_API_TOKEN`
 - Value: the token you just received in previous step
