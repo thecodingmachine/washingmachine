@@ -307,6 +307,9 @@ class RunCommand extends Command
             } else {
                 throw $e;
             }
+        } catch (BuildNotFoundException $e) {
+            // Maybe there is no .gitlab-ci.yml file on the target branch? In this case, there is no build.
+            return [EmptyCloverFile::create(), EmptyCloverFile::create()];
         }
     }
 
