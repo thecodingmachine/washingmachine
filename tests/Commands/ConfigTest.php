@@ -7,7 +7,6 @@ namespace TheCodingMachine\WashingMachine\Commands;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Input\InputDefinition;
 use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Input\StringInput;
 
 class ConfigTest extends \PHPUnit_Framework_TestCase
 {
@@ -27,7 +26,7 @@ class ConfigTest extends \PHPUnit_Framework_TestCase
             new InputOption('gitlab-url',
                 'u',
                 InputOption::VALUE_REQUIRED,
-                'The Gitlab URL. If not specified, it is deduced from the CI_BUILD_REPO environment variable.',
+                'The Gitlab URL. If not specified, it is deduced from the CI_REPOSITORY_URL environment variable.',
                 null),
             new InputOption('gitlab-project-name',
                 'p',
@@ -42,7 +41,7 @@ class ConfigTest extends \PHPUnit_Framework_TestCase
             new InputOption('gitlab-job-id',
                 'b',
                 InputOption::VALUE_REQUIRED,
-                'The Gitlab CI build id. If not specified, it is deduced from the CI_BUILD_ID environment variable.',
+                'The Gitlab CI build id. If not specified, it is deduced from the CI_JOB_ID environment variable.',
                 null),
             new InputOption('job-stage',
                 's',
@@ -97,7 +96,7 @@ class ConfigTest extends \PHPUnit_Framework_TestCase
 
     public function testGitlabUrlFromEnv()
     {
-        putenv('CI_BUILD_REPO=http://gitlab-ci-token:xxxxxx@git.example.com/mouf/test.git');
+        putenv('CI_REPOSITORY_URL=http://gitlab-ci-token:xxxxxx@git.example.com/mouf/test.git');
         $input = new ArrayInput([], $this->getInputDefinition());
         $config = new Config($input);
         $this->assertSame('http://git.example.com', $config->getGitlabUrl());
@@ -121,7 +120,7 @@ class ConfigTest extends \PHPUnit_Framework_TestCase
 
     public function testNoGitlabUrl()
     {
-        putenv('CI_BUILD_REPO');
+        putenv('CI_REPOSITORY_URL');
         $input = new ArrayInput([], $this->getInputDefinition());
 
         $config = new Config($input);
@@ -155,26 +154,16 @@ class ConfigTest extends \PHPUnit_Framework_TestCase
         $config->getGitlabProjectName();
     }
 
-    public function testGitlabBuildRefFromEnv()
+    public function testGitlab9CommitShaFromEnv()
     {
-        putenv('CI_BUILD_REF=DEADBEEFDEADBEEF');
-        $input = new ArrayInput([], $this->getInputDefinition());
-        $config = new Config($input);
-        $this->assertSame('DEADBEEFDEADBEEF', $config->getCommitSha());
-    }
-
-    public function testGitlab9BuildRefFromEnv()
-    {
-        putenv('CI_BUILD_REF');
         putenv('CI_COMMIT_SHA=DEADBEEFDEADBEEF');
         $input = new ArrayInput([], $this->getInputDefinition());
         $config = new Config($input);
         $this->assertSame('DEADBEEFDEADBEEF', $config->getCommitSha());
     }
 
-    public function testGitlabBuildRefFromParam()
+    public function testGitlabCommitShaFromParam()
     {
-        putenv('CI_BUILD_REF');
         putenv('CI_COMMIT_SHA');
         $input = new ArrayInput(array('--commit-sha' => 'DEADBEEFDEADBEEF2'), $this->getInputDefinition());
 
@@ -182,9 +171,8 @@ class ConfigTest extends \PHPUnit_Framework_TestCase
         $this->assertSame('DEADBEEFDEADBEEF2', $config->getCommitSha());
     }
 
-    public function testNoGitlabBuildRef()
+    public function testNoGitlabCommitSha()
     {
-        putenv('CI_BUILD_REF');
         putenv('CI_COMMIT_SHA');
         $input = new ArrayInput([], $this->getInputDefinition());
 
@@ -193,17 +181,8 @@ class ConfigTest extends \PHPUnit_Framework_TestCase
         $config->getCommitSha();
     }
 
-    public function testGitlabBuildIdFromEnv()
-    {
-        putenv('CI_BUILD_ID=42');
-        $input = new ArrayInput([], $this->getInputDefinition());
-        $config = new Config($input);
-        $this->assertSame(42, $config->getGitlabBuildId());
-    }
-
     public function testGitlabJobIdFromEnv()
     {
-        putenv('CI_BUILD_ID');
         putenv('CI_JOB_ID=42');
         $input = new ArrayInput([], $this->getInputDefinition());
         $config = new Config($input);
@@ -212,7 +191,6 @@ class ConfigTest extends \PHPUnit_Framework_TestCase
 
     public function testGitlabBuildIdFromParam()
     {
-        putenv('CI_BUILD_ID');
         putenv('CI_JOB_ID');
 
         $input = new ArrayInput(array('--gitlab-job-id' => '42'), $this->getInputDefinition());
@@ -223,7 +201,6 @@ class ConfigTest extends \PHPUnit_Framework_TestCase
 
     public function testNoGitlabBuildId()
     {
-        putenv('CI_BUILD_ID');
         $input = new ArrayInput([], $this->getInputDefinition());
 
         $config = new Config($input);

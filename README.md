@@ -2,9 +2,9 @@
 [![Total Downloads](https://poser.pugx.org/thecodingmachine/washingmachine/downloads)](https://packagist.org/packages/thecodingmachine/washingmachine)
 [![Latest Unstable Version](https://poser.pugx.org/thecodingmachine/washingmachine/v/unstable)](https://packagist.org/packages/thecodingmachine/washingmachine)
 [![License](https://poser.pugx.org/thecodingmachine/washingmachine/license)](https://packagist.org/packages/thecodingmachine/washingmachine)
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/thecodingmachine/washingmachine/badges/quality-score.png?b=1.3)](https://scrutinizer-ci.com/g/thecodingmachine/washingmachine/?branch=1.3)
-[![Build Status](https://travis-ci.org/thecodingmachine/washingmachine.svg?branch=1.3)](https://travis-ci.org/thecodingmachine/washingmachine)
-[![Coverage Status](https://coveralls.io/repos/thecodingmachine/washingmachine/badge.svg?branch=1.3&service=github)](https://coveralls.io/github/thecodingmachine/washingmachine?branch=1.3)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/thecodingmachine/washingmachine/badges/quality-score.png?b=2.0)](https://scrutinizer-ci.com/g/thecodingmachine/washingmachine/?branch=2.0)
+[![Build Status](https://travis-ci.org/thecodingmachine/washingmachine.svg?branch=2.0)](https://travis-ci.org/thecodingmachine/washingmachine)
+[![Coverage Status](https://coveralls.io/repos/thecodingmachine/washingmachine/badge.svg?branch=2.0&service=github)](https://coveralls.io/github/thecodingmachine/washingmachine?branch=2.0)
 
 
 # Washing machine
@@ -29,11 +29,9 @@ Got it?
 
 Now, we need to add this token as a "secret variable" of your project (so the CI script can modify the merge request comments):
 
-Go to your project page in Gitlab.
+Go to your project page in Gitlab
 
-In Gitlab 8 > **Settings ➔ Variables ➔ Add variable**
-In Gitlab 9+ > **Settings ➔ CI/CD Pipelines ➔ Secret Variables**
-
+**Settings ➔ CI/CD Pipelines ➔ Secret Variables**
 
 - Key: `GITLAB_API_TOKEN`
 - Value: the token you just received in previous step
@@ -65,7 +63,7 @@ image: php:7.0
 
 test:
   before_script:
-   - cd /root && composer create-project thecodingmachine/washingmachine washingmachine ^1.2
+   - cd /root && composer create-project thecodingmachine/washingmachine washingmachine ^2.0
  
   script:
    - phpdbg -qrr vendor/bin/phpunit
@@ -78,17 +76,12 @@ Notice that we need to make sure the PHPDbg extension for PHP is installed. Also
 
 ### Supported Gitlab versions
 
-Gitlab 8+ is supported.
+- The washingmachine v2.0+ has support for Gitlab 9+.
+
+If you seek support for older Gitlab versions, here is a list of supported Gitlab versions by washingmachine version:
 
 - The washingmachine v1.0 => v1.2 has support for Gitlab 8.
-- The washingmachine v1.2+ has support for Gitlab 8 and 9.
-
-Starting with v1.3, we use some features only available in Gitlab 9.
-You can still run the washingmachine on Gitlab 8.10+, but you will need to fill the `job_stage` parameters when program is run:
- 
-    /root/washingmachine/washingmachine run --job-stage=test
- 
-The 'job_stage' parameter is the name of the stage in your `gitlab-ci.yml` file.
+- The washingmachine v1.2+ has support for Gitlab 8 and up to Gitlab 9.5.
 
 ### Adding extra data in the comment
 

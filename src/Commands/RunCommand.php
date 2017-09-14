@@ -41,7 +41,7 @@ class RunCommand extends Command
             ->addOption('gitlab-url',
                 'u',
                 InputOption::VALUE_REQUIRED,
-                'The Gitlab URL. If not specified, it is deduced from the CI_BUILD_REPO environment variable.',
+                'The Gitlab URL. If not specified, it is deduced from the CI_REPOSITORY_URL environment variable.',
                 null)
             ->addOption('gitlab-api-token',
                 't',
@@ -66,7 +66,7 @@ class RunCommand extends Command
             ->addOption('gitlab-job-id',
                 'b',
                 InputOption::VALUE_REQUIRED,
-                'The Gitlab CI build/job id. If not specified, it is deduced from the CI_BUILD_ID environment variable.',
+                'The Gitlab CI build/job id. If not specified, it is deduced from the CI_JOB_ID environment variable.',
                 null)
             ->addOption('job-stage',
                 's',
@@ -219,7 +219,7 @@ class RunCommand extends Command
                     'description' => (string) $message
                 ];
 
-                $userId = $this->getCommiterId($client, $project, $commitSha);
+                $userId = $this->getCommiterId($project, $commitSha);
                 if ($userId !== null) {
                     $options['assignee_id'] = $userId;
                 }
@@ -234,25 +234,16 @@ class RunCommand extends Command
     /**
      * Returns the user id of the committer.
      *
-     * @param Client $client
      * @param Project $project
      * @param $commitRef
      * @return int|null
      */
-    private function getCommiterId(Client $client, Project $project, $commitRef)
+    private function getCommiterId(Project $project, $commitRef)
     {
 
         $commit = $project->commit($commitRef);
 
-        $users = $client->users->search($commit->author_email);
-
-        foreach ($users as $user) {
-            if ($user['email'] === $commit->author_email) {
-                return $user['id'];
-            }
-        }
-
-        return null;
+        return $commit->committer ? $commit->committer->id :  null;
     }
 
     /**
