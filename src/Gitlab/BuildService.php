@@ -42,8 +42,11 @@ class BuildService
      */
     public function findMergeRequestByCommitSha(string $projectName, string $commitSha) : array
     {
-        // Find in the last 50 merge requests (since our build was triggered recently, it should definitely be there)
-        $mergeRequests = $this->client->merge_requests->all($projectName, 1, 50, 'updated_at', 'desc');
+        // Find in the merge requests (since our build was triggered recently, it should definitely be there)
+        $mergeRequests = $this->client->merge_requests->all($projectName, [
+            'order_by' => 'updated_at',
+            'sort' => 'desc'
+        ]);
 
         foreach ($mergeRequests as $mergeRequest) {
             $commits = $this->client->merge_requests->commits($projectName, $mergeRequest['id']);
@@ -55,7 +58,7 @@ class BuildService
             }
         }
 
-        throw new MergeRequestNotFoundException('Could not find a PR (in the 50 last PRs) whose last commit/buildRef ID is '.$commitSha);
+        throw new MergeRequestNotFoundException('Could not find a PR whose last commit/buildRef ID is '.$commitSha);
     }
 
     public function getLatestCommitIdFromBranch(string $projectName, string $branchName) : string
