@@ -181,7 +181,7 @@ class RunCommand extends Command
 
             $this->addFilesToMessage($message, $files, $output, $config);
 
-            $client->merge_requests->addComment($projectName, $mergeRequest['id'], (string) $message);
+            $client->merge_requests->addNote($projectName, $mergeRequest['iid'], (string) $message);
 
             $inMergeRequest = true;
         } catch (MergeRequestNotFoundException $e) {
