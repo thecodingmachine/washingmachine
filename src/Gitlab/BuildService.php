@@ -74,14 +74,23 @@ class BuildService
      * @return array
      * @throws BuildNotFoundException
      */
-    public function getLatestBuildFromCommitId(string $projectName, string $commitId, int $numIter = 0) : array
+    public function getLatestPipelineFromCommitId(string $projectName, string $commitId, int $numIter = 0) : array
     {
-        $builds = $this->client->repositories->commitBuilds($projectName, $commitId, ['failed', 'success']);
+        // FIXME: can we pass ref to commitId?
+        $pipelines = $this->client->projects->pipelines($projectName, ['status'=>'failed', 'ref'=>$commitId]);
 
-        if (!empty($builds)) {
+        if (!empty($pipelines)) {
             // TODO: check that builds are ordered in reverse date order!!!
-            return $builds[0];
+            return $pipelines[0];
         }
+
+        $pipelines = $this->client->projects->pipelines($projectName, ['status'=>'success', 'ref'=>$commitId]);
+
+        if (!empty($pipelines)) {
+            // TODO: check that builds are ordered in reverse date order!!!
+            return $pipelines[0];
+        }
+
 
         $numIter++;
         // Let's find a build in the last 10 commits.
@@ -98,7 +107,7 @@ class BuildService
         }
 
         // Not found? Let's recurse.
-        return $this->getLatestBuildFromCommitId($projectName, $parentIds[0], $numIter);
+        return $this->getLatestPipelineFromCommitId($projectName, $parentIds[0], $numIter);
     }
 
     /**
@@ -107,12 +116,12 @@ class BuildService
      * @return array
      * @throws BuildNotFoundException
      */
-    public function getLatestBuildFromBranch(string $projectName, string $branchName) : array
+    public function getLatestPipelineFromBranch(string $projectName, string $branchName) : array
     {
         $commitId = $this->getLatestCommitIdFromBranch($projectName, $branchName);
 
         try {
-            return $this->getLatestBuildFromCommitId($projectName, $commitId);
+            return $this->getLatestPipelineFromCommitId($projectName, $commitId);
         } catch (BuildNotFoundException $e) {
             throw new BuildNotFoundException('Could not find a build for branch '.$projectName.':'.$branchName, 0, $e);
         }
@@ -130,7 +139,7 @@ class BuildService
 
     public function dumpArtifactFromBranch(string $projectName, string $branchName, string $jobStage, string $file)
     {
-        $build = $this->getLatestBuildFromBranch($projectName, $branchName);
+        $build = $this->getLatestPipelineFromBranch($projectName, $branchName);
         $this->dumpArtifact($projectName, $build['id'], $jobStage, $file);
     }
 }

@@ -282,7 +282,7 @@ class RunCommand extends Command
         try {
             $tmpFile = tempnam(sys_get_temp_dir(), 'art').'.zip';
 
-            $build = $buildService->getLatestBuildFromCommitId($projectName, $commitId);
+            $build = $buildService->getLatestPipelineFromCommitId($projectName, $commitId);
             $buildService->dumpArtifact($projectName, $build['id'], $jobStage, $tmpFile);
             $zipFile = new \ZipArchive();
             if ($zipFile->open($tmpFile)!==true) {
