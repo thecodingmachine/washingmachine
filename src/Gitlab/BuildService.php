@@ -156,7 +156,7 @@ class BuildService
 
     public function dumpArtifactFromBranch(string $projectName, string $branchName, string $jobStage, string $file)
     {
-        $build = $this->getLatestPipelineFromBranch($projectName, $branchName);
-        $this->dumpArtifact($projectName, $build['id'], $jobStage, $file);
+        $pipeline = $this->getLatestPipelineFromBranch($projectName, $branchName);
+        $this->dumpArtifact($projectName, $pipeline['sha'], $jobStage, $file);
     }
 }

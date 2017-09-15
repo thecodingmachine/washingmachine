@@ -299,8 +299,8 @@ class RunCommand extends Command
         try {
             $tmpFile = tempnam(sys_get_temp_dir(), 'art').'.zip';
 
-            $build = $buildService->getLatestPipelineFromCommitId($projectName, $commitId);
-            $buildService->dumpArtifact($projectName, $build['id'], $jobStage, $tmpFile);
+            $pipeline = $buildService->getLatestPipelineFromCommitId($projectName, $commitId);
+            $buildService->dumpArtifact($projectName, $pipeline['sha'], $jobStage, $tmpFile);
             $zipFile = new \ZipArchive();
             if ($zipFile->open($tmpFile)!==true) {
                 throw new \RuntimeException('Invalid ZIP archive '.$tmpFile);
