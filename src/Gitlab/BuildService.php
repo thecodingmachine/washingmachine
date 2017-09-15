@@ -141,12 +141,27 @@ class BuildService
         }
     }
 
-    public function dumpArtifact(string $projectName, string $buildRef, string $jobName, string $file)
+    public function dumpArtifact(string $projectName, string $pipelineId, string $jobName, string $file)
     {
         var_dump($projectName);
         var_dump($buildRef);
         var_dump($jobName);
-        $artifactContent = $this->client->jobs->artifactsByRefName($projectName, $buildRef, $jobName);
+        // Call seems broken
+        //$artifactContent = $this->client->jobs->artifactsByRefName($projectName, $buildRef, $jobName);
+
+        $jobs = $this->client->jobs->pipelineJobs($projectName, $pipelineId);
+        $job = null;
+        foreach ($jobs as $job) {
+            if ($job['name'] === $jobName && (in_array($job['status'], ['failed', 'success']))) {
+                break;
+            }
+        }
+
+        if ($job === null) {
+            throw new \RuntimeException('Could not find finished job with name '.$job['name'].'.');
+        }
+
+        $artifactContent = $this->client->jobs->artifacts($projectName, $job['id']);
 
         $stream = StreamWrapper::getResource($artifactContent);
 
@@ -157,6 +172,6 @@ class BuildService
     public function dumpArtifactFromBranch(string $projectName, string $branchName, string $jobStage, string $file)
     {
         $pipeline = $this->getLatestPipelineFromBranch($projectName, $branchName);
-        $this->dumpArtifact($projectName, $pipeline['sha'], $jobStage, $file);
+        $this->dumpArtifact($projectName, $pipeline['id'], $jobStage, $file);
     }
 }
