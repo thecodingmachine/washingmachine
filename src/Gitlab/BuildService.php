@@ -65,6 +65,30 @@ class BuildService
         return $branch['commit']['id'];
     }
 
+    private $pipelines = [];
+
+    private function getPipelines(string $projectName) : array
+    {
+        if (!isset($this->pipelines[$projectName])) {
+            $this->pipelines[$projectName] = $this->client->projects->pipelines($projectName);
+            var_dump($this->pipelines[$projectName]);
+        }
+        return $this->pipelines[$projectName];
+    }
+
+    public function findPipelineByCommit(string $projectName, string $commitId) : ?array
+    {
+        $pipelines = $this->getPipelines($projectName);
+
+        foreach ($pipelines as $pipeline) {
+            if ($pipeline['sha'] === $commitId) {
+                return $pipeline;
+            }
+        }
+
+        return null;
+    }
+
     /**
      * Recursive function that attempts to find a build in the previous commits.
      *
@@ -76,21 +100,12 @@ class BuildService
      */
     public function getLatestPipelineFromCommitId(string $projectName, string $commitId, int $numIter = 0) : array
     {
-        // FIXME: can we pass ref to commitId?
-        $pipelines = $this->client->projects->pipelines($projectName, ['status'=>'failed', 'ref'=>$commitId]);
 
-        if (!empty($pipelines)) {
-            // TODO: check that builds are ordered in reverse date order!!!
-            return $pipelines[0];
+        $pipeline = $this->findPipelineByCommit($projectName, $commitId);
+
+        if ($pipeline !== null) {
+            return $pipeline;
         }
-
-        $pipelines = $this->client->projects->pipelines($projectName, ['status'=>'success', 'ref'=>$commitId]);
-
-        if (!empty($pipelines)) {
-            // TODO: check that builds are ordered in reverse date order!!!
-            return $pipelines[0];
-        }
-
 
         $numIter++;
         // Let's find a build in the last 10 commits.
