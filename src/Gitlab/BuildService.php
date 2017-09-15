@@ -143,6 +143,9 @@ class BuildService
 
     public function dumpArtifact(string $projectName, string $buildRef, string $jobName, string $file)
     {
+        var_dump($projectName);
+        var_dump($buildRef);
+        var_dump($jobName);
         $artifactContent = $this->client->jobs->artifactsByRefName($projectName, $buildRef, $jobName);
 
         $stream = StreamWrapper::getResource($artifactContent);
