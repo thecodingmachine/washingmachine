@@ -167,6 +167,10 @@ class RunCommand extends Command
             $targetCommit = $repo->getLatestCommitForBranch('origin/'.$mergeRequest['target_branch']);
             $lastCommonCommit = $repo->getMergeBase($targetCommit, $commitSha);
 
+            $output->writeln('Pipeline current commit: '.$commitSha, OutputInterface::VERBOSITY_DEBUG);
+            $output->writeln('Target branch: '.$mergeRequest['target_branch'], OutputInterface::VERBOSITY_DEBUG);
+            $output->writeln('Target commit: '.$targetCommit, OutputInterface::VERBOSITY_DEBUG);
+            $output->writeln('Last common commit: '.$lastCommonCommit, OutputInterface::VERBOSITY_DEBUG);
 
             list($previousCodeCoverageProvider, $previousMethodsProvider) = $this->getMeasuresFromCommit($buildService, $mergeRequest['target_project_id'], $lastCommonCommit, $cloverFilePath, $crap4JFilePath, $config->getJobStage());
             //list($previousCodeCoverageProvider, $previousMethodsProvider) = $this->getMeasuresFromBranch($buildService, $mergeRequest['target_project_id'], $mergeRequest['target_branch'], $cloverFilePath, $crap4JFilePath);
