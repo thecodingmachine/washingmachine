@@ -144,4 +144,9 @@ class Config
     {
         return $this->input->getOption('open-issue');
     }
+
+    public function isAddCommentsInCommits() : bool
+    {
+        return $this->input->getOption('add-comments-in-commits');
+    }
 }

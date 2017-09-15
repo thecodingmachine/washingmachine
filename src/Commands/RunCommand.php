@@ -82,6 +82,10 @@ class RunCommand extends Command
                 'i',
                 InputOption::VALUE_NONE,
                 'Opens an issue (if the build is not part of a merge request)')
+            ->addOption('add-comments-in-commits',
+                null,
+                InputOption::VALUE_NONE,
+                'Add comments directly in the commit')
         ;
     }
 
@@ -193,8 +197,9 @@ class RunCommand extends Command
             $targetProjectId = $mergeRequest['target_project_id'] ?? $projectName;
             list($lastCommitCoverage, $lastCommitMethodsProvider) = $this->getMeasuresFromBranch($buildService, $targetProjectId, $currentBranchName, $cloverFilePath, $crap4JFilePath, $config->getJobStage());
 
-            $sendCommentService->sendDifferencesCommentsInCommit($methodsProvider, $lastCommitMethodsProvider, $projectName, $commitSha, $gitlabUrl);
-
+            if ($config->isAddCommentsInCommits()) {
+                $sendCommentService->sendDifferencesCommentsInCommit($methodsProvider, $lastCommitMethodsProvider, $projectName, $commitSha, $gitlabUrl);
+            }
 
             if ($config->isOpenIssue() && !$inMergeRequest) {
                 $message = new Message();

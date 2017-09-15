@@ -117,3 +117,16 @@ washingmachine run --open-issue
 ```
 
 Tip: you typically want to add the `--open-issue` tag conditionally if a build fails. Also, the `--open-issue` is ignored if a merge request matches the build.
+
+### Adding comments in commits
+
+The washingmachine can add comments directly in the commits (in addition to adding comments in the merge request).
+
+To add comments in commits, use the `--add-comments-in-commits` option:
+
+```
+washingmachine run --add-comments-in-commits
+```
+
+Note: this option was enabled by default in 1.x and has to be manually enabled in 2.x. For each comment, a mail is sent to the committer. This can generate a big number of mails on big commits. You have been warned :)
+

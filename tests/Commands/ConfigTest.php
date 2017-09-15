@@ -56,7 +56,11 @@ class ConfigTest extends \PHPUnit_Framework_TestCase
             new InputOption('open-issue',
                 'i',
                 InputOption::VALUE_NONE,
-                'Opens an issue (if the build is not part of a merge request)')
+                'Opens an issue (if the build is not part of a merge request)'),
+            new InputOption('add-comments-in-commits',
+                null,
+                InputOption::VALUE_NONE,
+                'Add comments directly in the commit')
         ]);
     }
 
@@ -261,5 +265,21 @@ class ConfigTest extends \PHPUnit_Framework_TestCase
 
         $config = new Config($input);
         $this->assertFalse($config->isOpenIssue());
+    }
+
+    public function testAddCommentsInCommitsTrue()
+    {
+        $input = new ArrayInput(array('--add-comments-in-commits' => true), $this->getInputDefinition());
+
+        $config = new Config($input);
+        $this->assertTrue($config->isAddCommentsInCommits());
+    }
+
+    public function testAddCommentsInCommitsFalse()
+    {
+        $input = new ArrayInput(array(), $this->getInputDefinition());
+
+        $config = new Config($input);
+        $this->assertFalse($config->isAddCommentsInCommits());
     }
 }
