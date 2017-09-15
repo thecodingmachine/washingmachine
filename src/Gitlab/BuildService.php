@@ -49,12 +49,9 @@ class BuildService
         ]);
 
         foreach ($mergeRequests as $mergeRequest) {
-            var_dump($mergeRequest);
-            $commits = $this->client->merge_requests->commits($projectName, $mergeRequest['id']);
             // Let's only return this PR if the returned commit is the FIRST one (otherwise, the commit ID is on an outdated version of the PR)
 
-            // Note: strangely, the "id" column of the commit is the build ref and not the commit id... weird!
-            if ($commits[0]['id'] === $commitSha) {
+            if ($mergeRequest['sha'] === $commitSha) {
                 return $mergeRequest;
             }
         }
