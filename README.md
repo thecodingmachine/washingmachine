@@ -59,7 +59,7 @@ Now, we need to install the *washingmachine*, and get it to run.
 
 `.gitlab-ci.yml`
 ```
-image: php:7.0
+image: php:7.1
 
 test:
   before_script:
