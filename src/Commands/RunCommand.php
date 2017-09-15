@@ -3,6 +3,8 @@ namespace TheCodingMachine\WashingMachine\Commands;
 
 use Gitlab\Client;
 use Gitlab\Model\Project;
+use Psr\Log\LoggerInterface;
+use Satooshi\Component\Log\ConsoleLogger;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -21,6 +23,10 @@ use TheCodingMachine\WashingMachine\Gitlab\SendCommentService;
 
 class RunCommand extends Command
 {
+    /**
+     * @var LoggerInterface
+     */
+    private $logger;
 
     protected function configure()
     {
@@ -91,6 +97,7 @@ class RunCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $this->logger = new ConsoleLogger($output);
         $config = new Config($input);
 
         $cloverFilePath = $config->getCloverFilePath();
@@ -300,15 +307,17 @@ class RunCommand extends Command
             return $this->getMeasuresFromZipFile($zipFile, $cloverPath, $crap4JPath);
         } catch (\RuntimeException $e) {
             if ($e->getCode() === 404) {
-                // We could not find a previous clover file in the give commit.
+                // We could not find a previous clover file in the given commit.
                 // Maybe this branch is the first to contain clover files?
                 // Let's deal with this by generating a fake "empty" clover file.
+                $this->logger->warning('We could not find a previous clover file in the build attached to commit '.$commitId.'. Maybe this branch is the first to contain clover files?');
                 return [EmptyCloverFile::create(), EmptyCloverFile::create()];
             } else {
                 throw $e;
             }
         } catch (BuildNotFoundException $e) {
             // Maybe there is no .gitlab-ci.yml file on the target branch? In this case, there is no build.
+            $this->logger->warning('We could not find a build for commit '.$commitId.'.');
             return [EmptyCloverFile::create(), EmptyCloverFile::create()];
         }
     }
