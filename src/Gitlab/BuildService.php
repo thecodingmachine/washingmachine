@@ -143,9 +143,6 @@ class BuildService
 
     public function dumpArtifact(string $projectName, string $pipelineId, string $jobName, string $file)
     {
-        var_dump($projectName);
-        var_dump($pipelineId);
-        var_dump($jobName);
         // Call seems broken
         //$artifactContent = $this->client->jobs->artifactsByRefName($projectName, $buildRef, $jobName);
 
