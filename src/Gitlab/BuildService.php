@@ -71,7 +71,6 @@ class BuildService
     {
         if (!isset($this->pipelines[$projectName])) {
             $this->pipelines[$projectName] = $this->client->projects->pipelines($projectName);
-            var_dump($this->pipelines[$projectName]);
         }
         return $this->pipelines[$projectName];
     }
