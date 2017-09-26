@@ -8,7 +8,7 @@ class DiffServiceTest extends \PHPUnit_Framework_TestCase
 {
     public function testGetMeaningfulDifferences()
     {
-        $service = new DiffService(1, 10);
+        $service = new DiffService(1, 10, 10);
 
         $cloverFile = CloverFile::fromFile(__DIR__.'/../Fixtures/clover.xml', '/home/david/projects/washing-machine');
         $oldCloverFile = CloverFile::fromFile(__DIR__.'/../Fixtures/oldClover.xml', '/home/david/projects/washing-machine');

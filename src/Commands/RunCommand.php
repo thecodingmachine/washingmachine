@@ -155,7 +155,7 @@ class RunCommand extends Command
         $client = Client::create($gitlabApiUrl);
         $client->authenticate($gitlabApiToken);
 
-        $diffService = new DiffService(1, 20);
+        $diffService = new DiffService(5, 30, 20);
 
         $sendCommentService = new SendCommentService($client, $diffService);
 
@@ -286,7 +286,7 @@ class RunCommand extends Command
                 // We could not find a previous clover file in the master branch.
                 // Maybe this branch is the first to contain clover files?
                 // Let's deal with this by generating a fake "empty" clover file.
-                $this->logger->warning('We could not find a previous clover file in the build attached to branch '.$targetBranch.'. Maybe this branch is the first to contain clover files?');
+                $this->logger->info('We could not find a previous clover file in the build attached to branch '.$targetBranch.'. Maybe this commit is the first on this branch?');
                 return [EmptyCloverFile::create(), EmptyCloverFile::create()];
             } else {
                 throw $e;
