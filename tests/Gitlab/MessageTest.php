@@ -16,7 +16,7 @@ class MessageTest extends \PHPUnit_Framework_TestCase
         $cloverFile = CloverFile::fromFile(__DIR__.'/../Fixtures/clover.xml', '/home/david/projects/washing-machine');
 
         $message = new Message();
-        $message->addDifferencesHtml($cloverFile, $cloverFile, new DiffService(5, 20), 42, 'http://gitlab', 'my_group/my_project');
+        $message->addDifferencesHtml($cloverFile, $cloverFile, new DiffService(5, 5, 20), 42, 'http://gitlab', 'my_group/my_project');
 
         $this->assertSame("No meaningful differences in code complexity detected.\n", (string) $message);
     }
@@ -26,7 +26,7 @@ class MessageTest extends \PHPUnit_Framework_TestCase
         $crap4JFile = Crap4JFile::fromFile(__DIR__.'/../Fixtures/crap4j.xml');
 
         $message = new Message();
-        $message->addDifferencesHtml($crap4JFile, EmptyCloverFile::create(), new DiffService(0, 20), 42, 'http://gitlab', 'my_group/my_project');
+        $message->addDifferencesHtml($crap4JFile, EmptyCloverFile::create(), new DiffService(0, 0, 20), 42, 'http://gitlab', 'my_group/my_project');
 
         $msg = (string) $message;
 

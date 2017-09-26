@@ -18,12 +18,21 @@ class DiffService
      * @var int
      */
     private $maxReturnedMethods;
+    /**
+     * @var float
+     */
+    private $crapScoreThreshold;
 
-    public function __construct(float $meaningfulCrapChange, int $maxReturnedMethods)
+    /**
+     * @param float $meaningfulCrapChange The minimum crap CHANGE that triggers a message for MODIFIED methods
+     * @param float $crapScoreThreshold The minimum crap score that triggers a message for all methods
+     * @param int $maxReturnedMethods
+     */
+    public function __construct(float $meaningfulCrapChange, float $crapScoreThreshold, int $maxReturnedMethods)
     {
-
         $this->meaningfulCrapChange = $meaningfulCrapChange;
         $this->maxReturnedMethods = $maxReturnedMethods;
+        $this->crapScoreThreshold = $crapScoreThreshold;
     }
 
     /**
@@ -46,14 +55,14 @@ class DiffService
 
         foreach ($inCommonMethods as $methodName) {
             $change = abs($newMethods[$methodName]->getCrap() - $oldMethods[$methodName]->getCrap());
-            if ($change > $this->meaningfulCrapChange) {
+            if ($change > $this->meaningfulCrapChange && ($newMethods[$methodName]->getCrap() > $this->crapScoreThreshold || $oldMethods[$methodName]->getCrap() > $this->crapScoreThreshold)) {
                 $differences[] = new Difference($newMethods[$methodName], $oldMethods[$methodName]);
             }
         }
 
         foreach ($createdMethods as $methodName) {
             $method = $newMethods[$methodName];
-            if ($method->getCrap() > $this->meaningfulCrapChange) {
+            if ($method->getCrap() > $this->crapScoreThreshold) {
                 $differences[] = new Difference($method, null);
             }
         }
