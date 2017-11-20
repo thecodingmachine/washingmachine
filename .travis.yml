@@ -10,9 +10,9 @@ env:
 matrix:
   fast_finish: true
   include:
-  - php: 7.0
-    env: DEPLOY=yes
   - php: 7.1
+    env: DEPLOY=yes
+  - php: 7.2
 cache:
   directories:
   - "$HOME/.composer/cache"
