@@ -38,5 +38,10 @@
             "TheCodingMachine\\WashingMachine\\": "tests/"
         }
     },
-    "bin": [ "washingmachine" ]
+    "bin": [ "washingmachine" ],
+    "config": {
+        "platform": {
+            "php": "7.1"
+        }
+    }
 }
