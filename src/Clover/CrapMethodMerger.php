@@ -2,6 +2,7 @@
 
 
 namespace TheCodingMachine\WashingMachine\Clover;
+use TheCodingMachine\WashingMachine\Clover\Analysis\Method;
 
 /**
  * Merges crap methods from Clover and Crap4J

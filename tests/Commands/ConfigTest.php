@@ -43,6 +43,11 @@ class ConfigTest extends \PHPUnit_Framework_TestCase
                 InputOption::VALUE_REQUIRED,
                 'The Gitlab CI build id. If not specified, it is deduced from the CI_JOB_ID environment variable.',
                 null),
+            new InputOption('gitlab-build-name',
+                'n',
+                InputOption::VALUE_REQUIRED,
+                'The Gitlab CI build name (the name of this build in the job). If not specified, it is deduced from the CI_BUILD_NAME environment variable.',
+                null),
             new InputOption('job-stage',
                 's',
                 InputOption::VALUE_REQUIRED,
@@ -190,26 +195,53 @@ class ConfigTest extends \PHPUnit_Framework_TestCase
         putenv('CI_JOB_ID=42');
         $input = new ArrayInput([], $this->getInputDefinition());
         $config = new Config($input);
-        $this->assertSame(42, $config->getGitlabBuildId());
+        $this->assertSame(42, $config->getGitlabJobId());
     }
 
-    public function testGitlabBuildIdFromParam()
+    public function testGitlabJobIdFromParam()
     {
         putenv('CI_JOB_ID');
 
         $input = new ArrayInput(array('--gitlab-job-id' => '42'), $this->getInputDefinition());
 
         $config = new Config($input);
-        $this->assertSame(42, $config->getGitlabBuildId());
+        $this->assertSame(42, $config->getGitlabJobId());
     }
 
-    public function testNoGitlabBuildId()
+    public function testNoGitlabJobId()
     {
         $input = new ArrayInput([], $this->getInputDefinition());
 
         $config = new Config($input);
         $this->expectException(\RuntimeException::class);
-        $config->getGitlabBuildId();
+        $config->getGitlabJobId();
+    }
+
+    public function testGitlabBuildNameFromEnv()
+    {
+        putenv('CI_BUILD_NAME=foo');
+        $input = new ArrayInput([], $this->getInputDefinition());
+        $config = new Config($input);
+        $this->assertSame('foo', $config->getGitlabBuildName());
+    }
+
+    public function testGitlabBuildNameFromParam()
+    {
+        putenv('CI_BUILD_NAME');
+
+        $input = new ArrayInput(array('--gitlab-build-name' => 'foo'), $this->getInputDefinition());
+
+        $config = new Config($input);
+        $this->assertSame('foo', $config->getGitlabBuildName());
+    }
+
+    public function testNoGitlabBuildName()
+    {
+        $input = new ArrayInput([], $this->getInputDefinition());
+
+        $config = new Config($input);
+        $this->expectException(\RuntimeException::class);
+        $config->getGitlabBuildName();
     }
 
     public function testGitlabJobStageFromParam()

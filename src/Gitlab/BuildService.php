@@ -22,19 +22,6 @@ class BuildService
     }
 
     /**
-     * Returns a commit ID from a project name and build ref.
-     *
-     * @param string $projectName
-     * @param string $buildRef
-     * @return string
-     */
-    public function getCommitId(string $projectName, string $buildRef) : string
-    {
-        $build = $this->client->projects->build($projectName, $buildRef);
-        return $build['commit']['id'];
-    }
-
-    /**
      * @param string $projectName
      * @param string $commitSha
      * @return array The merge request object
@@ -141,21 +128,22 @@ class BuildService
         }
     }
 
-    public function dumpArtifact(string $projectName, string $pipelineId, string $jobName, string $file)
+    public function dumpArtifact(string $projectName, string $pipelineId, string $buildName, string $jobStage, string $file)
     {
         // Call seems broken
         //$artifactContent = $this->client->jobs->artifactsByRefName($projectName, $buildRef, $jobName);
 
         $jobs = $this->client->jobs->pipelineJobs($projectName, $pipelineId);
         $job = null;
-        foreach ($jobs as $job) {
-            if ($job['name'] === $jobName && (in_array($job['status'], ['failed', 'success']))) {
+        foreach ($jobs as $jobItem) {
+            if ($jobItem['name'] === $buildName && $jobItem['stage'] === $jobStage && (in_array($jobItem['status'], ['failed', 'success']))) {
+                $job = $jobItem;
                 break;
             }
         }
 
         if ($job === null) {
-            throw new \RuntimeException('Could not find finished job with name '.$job['name'].'.');
+            throw new \RuntimeException('Could not find finished job with build name "'.$buildName.'" and stage "'.$jobStage.'" in pipeline "'.$pipelineId.'"');
         }
 
         $artifactContent = $this->client->jobs->artifacts($projectName, $job['id']);
@@ -166,9 +154,9 @@ class BuildService
         $filesystem->dumpFile($file, $stream);
     }
 
-    public function dumpArtifactFromBranch(string $projectName, string $branchName, string $jobStage, string $file)
+    public function dumpArtifactFromBranch(string $projectName, string $branchName, string $buildName, string $jobStage, string $file)
     {
         $pipeline = $this->getLatestPipelineFromBranch($projectName, $branchName);
-        $this->dumpArtifact($projectName, $pipeline['id'], $jobStage, $file);
+        $this->dumpArtifact($projectName, $pipeline['id'], $buildName, $jobStage, $file);
     }
 }

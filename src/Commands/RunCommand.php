@@ -74,10 +74,15 @@ class RunCommand extends Command
                 InputOption::VALUE_REQUIRED,
                 'The Gitlab CI build/job id. If not specified, it is deduced from the CI_JOB_ID environment variable.',
                 null)
+            ->addOption('gitlab-build-name',
+                'a',
+                InputOption::VALUE_REQUIRED,
+                'The Gitlab CI build name (the name of this build in the job). If not specified, it is deduced from the CI_BUILD_NAME environment variable.',
+                null)
             ->addOption('job-stage',
                 's',
                 InputOption::VALUE_REQUIRED,
-                'The Gitlab CI job stage. If not specified, it is deduced from the CI_JOB_ID environment variable (only available in Gitlab 9+).',
+                'The Gitlab CI job stage. If not specified, it is deduced from the CI_JOB_STAGE environment variable.',
                 null)
             ->addOption('file',
                 'f',
@@ -179,7 +184,7 @@ class RunCommand extends Command
             $output->writeln('Target commit: '.$targetCommit, OutputInterface::VERBOSITY_DEBUG);
             $output->writeln('Last common commit: '.$lastCommonCommit, OutputInterface::VERBOSITY_DEBUG);
 
-            list($previousCodeCoverageProvider, $previousMethodsProvider) = $this->getMeasuresFromCommit($buildService, $mergeRequest['target_project_id'], $lastCommonCommit, $cloverFilePath, $crap4JFilePath, $config->getJobStage());
+            list($previousCodeCoverageProvider, $previousMethodsProvider) = $this->getMeasuresFromCommit($buildService, $mergeRequest['target_project_id'], $lastCommonCommit, $cloverFilePath, $crap4JFilePath, $config->getJobStage(), $config->getGitlabBuildName());
             //list($previousCodeCoverageProvider, $previousMethodsProvider) = $this->getMeasuresFromBranch($buildService, $mergeRequest['target_project_id'], $mergeRequest['target_branch'], $cloverFilePath, $crap4JFilePath);
 
             $message = new Message();
@@ -206,7 +211,7 @@ class RunCommand extends Command
 
         try {
             $targetProjectId = $mergeRequest['target_project_id'] ?? $projectName;
-            list($lastCommitCoverage, $lastCommitMethodsProvider) = $this->getMeasuresFromBranch($buildService, $targetProjectId, $currentBranchName, $cloverFilePath, $crap4JFilePath, $config->getJobStage());
+            list($lastCommitCoverage, $lastCommitMethodsProvider) = $this->getMeasuresFromBranch($buildService, $targetProjectId, $currentBranchName, $cloverFilePath, $crap4JFilePath, $config->getJobStage(), $config->getGitlabBuildName());
 
             if ($config->isAddCommentsInCommits()) {
                 $sendCommentService->sendDifferencesCommentsInCommit($methodsProvider, $lastCommitMethodsProvider, $projectName, $commitSha, $gitlabUrl);
@@ -251,7 +256,7 @@ class RunCommand extends Command
      * Returns the user id of the committer.
      *
      * @param Project $project
-     * @param $commitRef
+     * @param string $commitRef
      * @return int|null
      */
     private function getCommiterId(Project $project, $commitRef)
@@ -270,12 +275,12 @@ class RunCommand extends Command
      * @param string $crap4JPath
      * @return array First element: code coverage, second element: list of methods.
      */
-    public function getMeasuresFromBranch(BuildService $buildService, string $projectName, string $targetBranch, string $cloverPath, string $crap4JPath, string $jobStage) : array
+    public function getMeasuresFromBranch(BuildService $buildService, string $projectName, string $targetBranch, string $cloverPath, string $crap4JPath, string $jobStage, string $buildName) : array
     {
         try {
             $tmpFile = tempnam(sys_get_temp_dir(), 'art').'.zip';
 
-            $buildService->dumpArtifactFromBranch($projectName, $targetBranch, $jobStage, $tmpFile);
+            $buildService->dumpArtifactFromBranch($projectName, $targetBranch, $buildName, $jobStage, $tmpFile);
             $zipFile = new \ZipArchive();
             if ($zipFile->open($tmpFile)!==true) {
                 throw new \RuntimeException('Invalid ZIP archive '.$tmpFile);
@@ -294,13 +299,13 @@ class RunCommand extends Command
         }
     }
 
-    public function getMeasuresFromCommit(BuildService $buildService, string $projectName, string $commitId, string $cloverPath, string $crap4JPath, string $jobStage) : array
+    public function getMeasuresFromCommit(BuildService $buildService, string $projectName, string $commitId, string $cloverPath, string $crap4JPath, string $jobStage, string $buildName) : array
     {
         try {
             $tmpFile = tempnam(sys_get_temp_dir(), 'art').'.zip';
 
             $pipeline = $buildService->getLatestPipelineFromCommitId($projectName, $commitId);
-            $buildService->dumpArtifact($projectName, $pipeline['id'], $jobStage, $tmpFile);
+            $buildService->dumpArtifact($projectName, $pipeline['id'], $buildName, $jobStage, $tmpFile);
             $zipFile = new \ZipArchive();
             if ($zipFile->open($tmpFile)!==true) {
                 throw new \RuntimeException('Invalid ZIP archive '.$tmpFile);
@@ -312,6 +317,9 @@ class RunCommand extends Command
                 // Maybe this branch is the first to contain clover files?
                 // Let's deal with this by generating a fake "empty" clover file.
                 $this->logger->warning('We could not find a previous clover file in the build attached to commit '.$commitId.'. Maybe this branch is the first to contain clover files?');
+                $this->logger->debug($e->getMessage().' - '.$e->getTraceAsString(), [
+                    'exception' => $e
+                ]);
                 return [EmptyCloverFile::create(), EmptyCloverFile::create()];
             } else {
                 throw $e;
@@ -364,7 +372,7 @@ class RunCommand extends Command
                 continue;
             }
 
-            $message->addFile(new \SplFileInfo($file), $config->getGitlabUrl(), $config->getGitlabProjectName(), $config->getGitlabBuildId());
+            $message->addFile(new \SplFileInfo($file), $config->getGitlabUrl(), $config->getGitlabProjectName(), $config->getGitlabJobId());
         }
     }
 }
