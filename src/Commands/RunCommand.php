@@ -256,7 +256,7 @@ class RunCommand extends Command
      * Returns the user id of the committer.
      *
      * @param Project $project
-     * @param $commitRef
+     * @param string $commitRef
      * @return int|null
      */
     private function getCommiterId(Project $project, $commitRef)
@@ -305,8 +305,6 @@ class RunCommand extends Command
             $tmpFile = tempnam(sys_get_temp_dir(), 'art').'.zip';
 
             $pipeline = $buildService->getLatestPipelineFromCommitId($projectName, $commitId);
-            var_dump($projectName);
-            var_dump($jobStage);
             $buildService->dumpArtifact($projectName, $pipeline['id'], $buildName, $jobStage, $tmpFile);
             $zipFile = new \ZipArchive();
             if ($zipFile->open($tmpFile)!==true) {

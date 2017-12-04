@@ -22,19 +22,6 @@ class BuildService
     }
 
     /**
-     * Returns a commit ID from a project name and build ref.
-     *
-     * @param string $projectName
-     * @param string $buildRef
-     * @return string
-     */
-    public function getCommitId(string $projectName, string $buildRef) : string
-    {
-        $build = $this->client->projects->build($projectName, $buildRef);
-        return $build['commit']['id'];
-    }
-
-    /**
      * @param string $projectName
      * @param string $commitSha
      * @return array The merge request object
