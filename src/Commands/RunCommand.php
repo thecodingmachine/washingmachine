@@ -214,46 +214,48 @@ class RunCommand extends Command
             $output->writeln('It seems that this CI build is not part of a merge request.');
         }
 
-        try {
-            $targetProjectId = $mergeRequest['target_project_id'] ?? $projectName;
-            list($lastCommitCoverage, $lastCommitMethodsProvider) = $this->getMeasuresFromBranch($buildService, $targetProjectId, $currentBranchName, $cloverFilePath, $crap4JFilePath, $config->getJobStage(), $config->getGitlabBuildName(), $config->getGitlabPipelineId());
+        if ($config->isAddCommentsInCommits() || ($config->isOpenIssue() && !$inMergeRequest)) {
+            try {
+                $targetProjectId = $mergeRequest['target_project_id'] ?? $projectName;
+                list($lastCommitCoverage, $lastCommitMethodsProvider) = $this->getMeasuresFromBranch($buildService, $targetProjectId, $currentBranchName, $cloverFilePath, $crap4JFilePath, $config->getJobStage(), $config->getGitlabBuildName(), $config->getGitlabPipelineId());
 
-            if ($config->isAddCommentsInCommits()) {
-                $sendCommentService->sendDifferencesCommentsInCommit($methodsProvider, $lastCommitMethodsProvider, $projectName, $commitSha, $gitlabUrl);
+                if ($config->isAddCommentsInCommits()) {
+                    $sendCommentService->sendDifferencesCommentsInCommit($methodsProvider, $lastCommitMethodsProvider, $projectName, $commitSha, $gitlabUrl);
+                }
+
+                if ($config->isOpenIssue() && !$inMergeRequest) {
+                    $message = new Message();
+
+                    if ($codeCoverageProvider !== null) {
+                        $message->addCoverageMessage($codeCoverageProvider, $lastCommitCoverage);
+                    } else {
+                        $output->writeln('Could not find clover file for code coverage analysis.');
+                    }
+
+                    if ($methodsProvider !== null) {
+                        $message->addDifferencesHtml($methodsProvider, $lastCommitMethodsProvider, $diffService, $commitSha, $gitlabUrl, $projectName);
+                    } else {
+                        $output->writeln('Could not find clover file nor crap4j file for CRAP score analysis.');
+                    }
+
+                    $this->addFilesToMessage($message, $files, $output, $config);
+
+                    $project = new Project($projectName, $client);
+
+                    $options = [
+                        'description' => (string) $message
+                    ];
+
+                    $userId = $this->getCommiterId($project, $commitSha);
+                    if ($userId !== null) {
+                        $options['assignee_id'] = $userId;
+                    }
+
+                    $project->createIssue('Build failed', $options);
+                }
+            } catch (BuildNotFoundException $e) {
+                $output->writeln('Unable to find a previous build for this branch. Skipping adding comments inside the commit. '.$e->getMessage());
             }
-
-            if ($config->isOpenIssue() && !$inMergeRequest) {
-                $message = new Message();
-
-                if ($codeCoverageProvider !== null) {
-                    $message->addCoverageMessage($codeCoverageProvider, $lastCommitCoverage);
-                } else {
-                    $output->writeln('Could not find clover file for code coverage analysis.');
-                }
-
-                if ($methodsProvider !== null) {
-                    $message->addDifferencesHtml($methodsProvider, $lastCommitMethodsProvider, $diffService, $commitSha, $gitlabUrl, $projectName);
-                } else {
-                    $output->writeln('Could not find clover file nor crap4j file for CRAP score analysis.');
-                }
-
-                $this->addFilesToMessage($message, $files, $output, $config);
-
-                $project = new Project($projectName, $client);
-
-                $options = [
-                    'description' => (string) $message
-                ];
-
-                $userId = $this->getCommiterId($project, $commitSha);
-                if ($userId !== null) {
-                    $options['assignee_id'] = $userId;
-                }
-
-                $project->createIssue('Build failed', $options);
-            }
-        } catch (BuildNotFoundException $e) {
-            $output->writeln('Unable to find a previous build for this branch. Skipping adding comments inside the commit. '.$e->getMessage());
         }
     }
 
