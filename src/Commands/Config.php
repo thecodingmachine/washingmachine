@@ -107,7 +107,7 @@ class Config
         return $commitSha;
     }
 
-    public function getGitlabBuildId() : int
+    public function getGitlabJobId() : int
     {
         $buildId = $this->input->getOption('gitlab-job-id');
         if ($buildId === null) {
@@ -117,6 +117,18 @@ class Config
             }
         }
         return $buildId;
+    }
+
+    public function getGitlabBuildName() : string
+    {
+        $buildName = $this->input->getOption('gitlab-build-name');
+        if ($buildName === null) {
+            $buildName = getenv('CI_BUILD_NAME');
+            if ($buildName === false) {
+                throw new \RuntimeException('Could not find the Gitlab build name in the "CI_BUILD_NAME" environment variable (usually set by Gitlab CI). Either set this environment variable or pass the build id via the --gitlab-build-name command line option.');
+            }
+        }
+        return $buildName;
     }
 
     /**
