@@ -79,6 +79,11 @@ class RunCommand extends Command
                 InputOption::VALUE_REQUIRED,
                 'The Gitlab CI build name (the name of this build in the job). If not specified, it is deduced from the CI_BUILD_NAME environment variable.',
                 null)
+            ->addOption('gitlab-pipeline-id',
+                'e',
+                InputOption::VALUE_REQUIRED,
+                'The Gitlab CI pipeline ID. If not specified, it is deduced from the CI_PIPELINE_ID environment variable.',
+                null)
             ->addOption('job-stage',
                 's',
                 InputOption::VALUE_REQUIRED,
@@ -184,7 +189,7 @@ class RunCommand extends Command
             $output->writeln('Target commit: '.$targetCommit, OutputInterface::VERBOSITY_DEBUG);
             $output->writeln('Last common commit: '.$lastCommonCommit, OutputInterface::VERBOSITY_DEBUG);
 
-            list($previousCodeCoverageProvider, $previousMethodsProvider) = $this->getMeasuresFromCommit($buildService, $mergeRequest['target_project_id'], $lastCommonCommit, $cloverFilePath, $crap4JFilePath, $config->getJobStage(), $config->getGitlabBuildName());
+            list($previousCodeCoverageProvider, $previousMethodsProvider) = $this->getMeasuresFromCommit($buildService, $mergeRequest['target_project_id'], $lastCommonCommit, $cloverFilePath, $crap4JFilePath, $config->getJobStage(), $config->getGitlabBuildName(), null);
             //list($previousCodeCoverageProvider, $previousMethodsProvider) = $this->getMeasuresFromBranch($buildService, $mergeRequest['target_project_id'], $mergeRequest['target_branch'], $cloverFilePath, $crap4JFilePath);
 
             $message = new Message();
@@ -211,7 +216,7 @@ class RunCommand extends Command
 
         try {
             $targetProjectId = $mergeRequest['target_project_id'] ?? $projectName;
-            list($lastCommitCoverage, $lastCommitMethodsProvider) = $this->getMeasuresFromBranch($buildService, $targetProjectId, $currentBranchName, $cloverFilePath, $crap4JFilePath, $config->getJobStage(), $config->getGitlabBuildName());
+            list($lastCommitCoverage, $lastCommitMethodsProvider) = $this->getMeasuresFromBranch($buildService, $targetProjectId, $currentBranchName, $cloverFilePath, $crap4JFilePath, $config->getJobStage(), $config->getGitlabBuildName(), $config->getGitlabPipelineId());
 
             if ($config->isAddCommentsInCommits()) {
                 $sendCommentService->sendDifferencesCommentsInCommit($methodsProvider, $lastCommitMethodsProvider, $projectName, $commitSha, $gitlabUrl);
@@ -274,13 +279,14 @@ class RunCommand extends Command
      * @param string $cloverPath
      * @param string $crap4JPath
      * @return array First element: code coverage, second element: list of methods.
+     * @throws BuildNotFoundException
      */
-    public function getMeasuresFromBranch(BuildService $buildService, string $projectName, string $targetBranch, string $cloverPath, string $crap4JPath, string $jobStage, string $buildName) : array
+    public function getMeasuresFromBranch(BuildService $buildService, string $projectName, string $targetBranch, string $cloverPath, string $crap4JPath, string $jobStage, string $buildName, string $excludePipelineId) : array
     {
         try {
             $tmpFile = tempnam(sys_get_temp_dir(), 'art').'.zip';
 
-            $buildService->dumpArtifactFromBranch($projectName, $targetBranch, $buildName, $jobStage, $tmpFile);
+            $buildService->dumpArtifactFromBranch($projectName, $targetBranch, $buildName, $jobStage, $tmpFile, $excludePipelineId);
             $zipFile = new \ZipArchive();
             if ($zipFile->open($tmpFile)!==true) {
                 throw new \RuntimeException('Invalid ZIP archive '.$tmpFile);
@@ -299,12 +305,12 @@ class RunCommand extends Command
         }
     }
 
-    public function getMeasuresFromCommit(BuildService $buildService, string $projectName, string $commitId, string $cloverPath, string $crap4JPath, string $jobStage, string $buildName) : array
+    public function getMeasuresFromCommit(BuildService $buildService, string $projectName, string $commitId, string $cloverPath, string $crap4JPath, string $jobStage, string $buildName, ?string $excludePipelineId) : array
     {
         try {
             $tmpFile = tempnam(sys_get_temp_dir(), 'art').'.zip';
 
-            $pipeline = $buildService->getLatestPipelineFromCommitId($projectName, $commitId);
+            $pipeline = $buildService->getLatestPipelineFromCommitId($projectName, $commitId, $excludePipelineId);
             $buildService->dumpArtifact($projectName, $pipeline['id'], $buildName, $jobStage, $tmpFile);
             $zipFile = new \ZipArchive();
             if ($zipFile->open($tmpFile)!==true) {
