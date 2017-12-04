@@ -80,16 +80,17 @@ class BuildService
      *
      * @param string $projectName
      * @param string $commitId
+     * @param string|null $excludePipelineId A pipeline ID we want to exclude (we don't want to get the current pipeline ID).
      * @param int $numIter
      * @return array
      * @throws BuildNotFoundException
      */
-    public function getLatestPipelineFromCommitId(string $projectName, string $commitId, int $numIter = 0) : array
+    public function getLatestPipelineFromCommitId(string $projectName, string $commitId, string $excludePipelineId = null, int $numIter = 0) : array
     {
 
         $pipeline = $this->findPipelineByCommit($projectName, $commitId);
 
-        if ($pipeline !== null) {
+        if ($pipeline !== null && $pipeline['id'] !== $excludePipelineId) {
             return $pipeline;
         }
 
@@ -108,26 +109,35 @@ class BuildService
         }
 
         // Not found? Let's recurse.
-        return $this->getLatestPipelineFromCommitId($projectName, $parentIds[0], $numIter);
+        return $this->getLatestPipelineFromCommitId($projectName, $parentIds[0], $excludePipelineId, $numIter);
     }
 
     /**
      * @param string $projectName
      * @param string $branchName
+     * @param string $excludePipelineId A pipeline ID we want to exclude (we don't want to get the current pipeline ID).
      * @return array
      * @throws BuildNotFoundException
      */
-    public function getLatestPipelineFromBranch(string $projectName, string $branchName) : array
+    public function getLatestPipelineFromBranch(string $projectName, string $branchName, string $excludePipelineId) : array
     {
         $commitId = $this->getLatestCommitIdFromBranch($projectName, $branchName);
 
         try {
-            return $this->getLatestPipelineFromCommitId($projectName, $commitId);
+            return $this->getLatestPipelineFromCommitId($projectName, $commitId, $excludePipelineId);
         } catch (BuildNotFoundException $e) {
             throw new BuildNotFoundException('Could not find a build for branch '.$projectName.':'.$branchName, 0, $e);
         }
     }
 
+    /**
+     * @param string $projectName
+     * @param string $pipelineId
+     * @param string $buildName
+     * @param string $jobStage
+     * @param string $file
+     * @throws BuildNotFoundException
+     */
     public function dumpArtifact(string $projectName, string $pipelineId, string $buildName, string $jobStage, string $file)
     {
         // Call seems broken
@@ -143,7 +153,7 @@ class BuildService
         }
 
         if ($job === null) {
-            throw new \RuntimeException('Could not find finished job with build name "'.$buildName.'" and stage "'.$jobStage.'" in pipeline "'.$pipelineId.'"');
+            throw new BuildNotFoundException('Could not find finished job with build name "'.$buildName.'" and stage "'.$jobStage.'" in pipeline "'.$pipelineId.'"');
         }
 
         $artifactContent = $this->client->jobs->artifacts($projectName, $job['id']);
@@ -154,9 +164,18 @@ class BuildService
         $filesystem->dumpFile($file, $stream);
     }
 
-    public function dumpArtifactFromBranch(string $projectName, string $branchName, string $buildName, string $jobStage, string $file)
+    /**
+     * @param string $projectName
+     * @param string $branchName
+     * @param string $buildName
+     * @param string $jobStage
+     * @param string $file
+     * @param string $excludePipelineId A pipeline ID we want to exclude (we don't want to get the current pipeline ID).
+     * @throws BuildNotFoundException
+     */
+    public function dumpArtifactFromBranch(string $projectName, string $branchName, string $buildName, string $jobStage, string $file, string $excludePipelineId)
     {
-        $pipeline = $this->getLatestPipelineFromBranch($projectName, $branchName);
+        $pipeline = $this->getLatestPipelineFromBranch($projectName, $branchName, $excludePipelineId);
         $this->dumpArtifact($projectName, $pipeline['id'], $buildName, $jobStage, $file);
     }
 }

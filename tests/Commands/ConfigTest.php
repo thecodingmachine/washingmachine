@@ -48,6 +48,11 @@ class ConfigTest extends \PHPUnit_Framework_TestCase
                 InputOption::VALUE_REQUIRED,
                 'The Gitlab CI build name (the name of this build in the job). If not specified, it is deduced from the CI_BUILD_NAME environment variable.',
                 null),
+            new InputOption('gitlab-pipeline-id',
+                'e',
+                InputOption::VALUE_REQUIRED,
+                'The Gitlab CI pipeline ID. If not specified, it is deduced from the CI_PIPELINE_ID environment variable.',
+                null),
             new InputOption('job-stage',
                 's',
                 InputOption::VALUE_REQUIRED,
@@ -242,6 +247,33 @@ class ConfigTest extends \PHPUnit_Framework_TestCase
         $config = new Config($input);
         $this->expectException(\RuntimeException::class);
         $config->getGitlabBuildName();
+    }
+
+    public function testGitlabPipelineIdFromEnv()
+    {
+        putenv('CI_PIPELINE_ID=42');
+        $input = new ArrayInput([], $this->getInputDefinition());
+        $config = new Config($input);
+        $this->assertSame(42, $config->getGitlabPipelineId());
+    }
+
+    public function testGitlabPipelineIdFromParam()
+    {
+        putenv('CI_PIPELINE_ID');
+
+        $input = new ArrayInput(array('--gitlab-pipeline-id' => 42), $this->getInputDefinition());
+
+        $config = new Config($input);
+        $this->assertSame(42, $config->getGitlabPipelineId());
+    }
+
+    public function testNoGitlabPipelineId()
+    {
+        $input = new ArrayInput([], $this->getInputDefinition());
+
+        $config = new Config($input);
+        $this->expectException(\RuntimeException::class);
+        $config->getGitlabPipelineId();
     }
 
     public function testGitlabJobStageFromParam()

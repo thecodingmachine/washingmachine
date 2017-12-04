@@ -161,4 +161,16 @@ class Config
     {
         return $this->input->getOption('add-comments-in-commits');
     }
+
+    public function getGitlabPipelineId() : int
+    {
+        $buildName = $this->input->getOption('gitlab-pipeline-id');
+        if ($buildName === null) {
+            $buildName = getenv('CI_PIPELINE_ID');
+            if ($buildName === false) {
+                throw new \RuntimeException('Could not find the Gitlab pipeline ID in the "CI_PIPELINE_ID" environment variable (usually set by Gitlab CI). Either set this environment variable or pass the build id via the --gitlab-pipeline-id command line option.');
+            }
+        }
+        return $buildName;
+    }
 }
