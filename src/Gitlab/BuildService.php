@@ -3,6 +3,7 @@ namespace TheCodingMachine\WashingMachine\Gitlab;
 use Gitlab\Client;
 use GuzzleHttp\Psr7\Stream;
 use GuzzleHttp\Psr7\StreamWrapper;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Filesystem\Filesystem;
 
 /**
@@ -14,11 +15,15 @@ class BuildService
      * @var Client
      */
     private $client;
+    /**
+     * @var LoggerInterface
+     */
+    private $logger;
 
-    public function __construct(Client $client)
+    public function __construct(Client $client, LoggerInterface $logger)
     {
-
         $this->client = $client;
+        $this->logger = $logger;
     }
 
     /**
@@ -87,24 +92,31 @@ class BuildService
      */
     public function getLatestPipelineFromCommitId(string $projectName, string $commitId, string $excludePipelineId = null, int $numIter = 0) : array
     {
-
+        $this->logger->debug('Looking for pipeline for commit '.$commitId);
         $pipeline = $this->findPipelineByCommit($projectName, $commitId);
 
         if ($pipeline !== null && $pipeline['id'] !== $excludePipelineId) {
+            $this->logger->debug('Found pipeline '.$pipeline['id'].' for commit '.$commitId);
             return $pipeline;
+        }
+        if ($pipeline['id'] === $excludePipelineId) {
+            $this->logger->debug('Ignoring pipeline '.$excludePipelineId.' for commit '.$commitId);
         }
 
         $numIter++;
         // Let's find a build in the last 10 commits.
         if ($numIter > 10) {
+            $this->logger->debug('Could not find a build for commit '.$projectName.':'.$commitId.', after iterating on 10 parent commits.');
             throw new BuildNotFoundException('Could not find a build for commit '.$projectName.':'.$commitId);
         }
+        $this->logger->debug('Could not find a build for commit '.$projectName.':'.$commitId.'. Looking for a build in parent commit.');
 
         // Let's get the commit info
         $commit = $this->client->repositories->commit($projectName, $commitId);
         $parentIds = $commit['parent_ids'];
 
         if (count($parentIds) !== 1) {
+            $this->logger->debug('Cannot look into parent commit because it is a merge from 2 branches.');
             throw new BuildNotFoundException('Could not find a build for commit '.$projectName.':'.$commitId);
         }
 
