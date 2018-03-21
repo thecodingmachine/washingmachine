@@ -176,7 +176,7 @@ class RunCommand extends Command
         // From the merge_requests API, we can get the list of commits for a single merge request
         // Hence, we can find the merge_request matching a build!
 
-        $buildService = new BuildService($client);
+        $buildService = new BuildService($client, $this->logger);
 
         $inMergeRequest = false;
 
