@@ -70,6 +70,7 @@ class BuildService
     public function findPipelineByCommit(string $projectName, string $commitId) : ?array
     {
         $pipelines = $this->getPipelines($projectName);
+        $this->logger->debug('Analysing '.count($pipelines).' pipelines to find pipeline for commit '.$commitId);
 
         foreach ($pipelines as $pipeline) {
             if ($pipeline['sha'] === $commitId) {
@@ -92,15 +93,16 @@ class BuildService
      */
     public function getLatestPipelineFromCommitId(string $projectName, string $commitId, string $excludePipelineId = null, int $numIter = 0) : array
     {
-        $this->logger->debug('Looking for pipeline for commit '.$commitId);
+        $this->logger->debug('Looking for latest pipeline for commit '.$commitId);
         $pipeline = $this->findPipelineByCommit($projectName, $commitId);
 
         if ($pipeline !== null && $pipeline['id'] !== $excludePipelineId) {
-            $this->logger->debug('Found pipeline '.$pipeline['id'].' for commit '.$commitId);
-            return $pipeline;
-        }
-        if ($pipeline['id'] === $excludePipelineId) {
-            $this->logger->debug('Ignoring pipeline '.$excludePipelineId.' for commit '.$commitId);
+            if ($pipeline['id'] !== $excludePipelineId) {
+                $this->logger->debug('Found pipeline '.$pipeline['id'].' for commit '.$commitId);
+                return $pipeline;
+            } else {
+                $this->logger->debug('Ignoring pipeline '.$excludePipelineId.' for commit '.$commitId);
+            }
         }
 
         $numIter++;
