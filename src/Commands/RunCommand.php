@@ -139,7 +139,10 @@ class RunCommand extends Command
         } elseif ($crap4jFile !== null) {
             $methodsProvider = $crap4jFile;
         } elseif (empty($files)) {
-            throw new \RuntimeException('Could not find neither clover file, nor crap4j file for analysis nor files to send in comments. Nothing done. Searched paths: '.$cloverFilePath.' and '.$crap4JFilePath);
+            $output->writeln('<error>Could not find neither clover file, nor crap4j file for analysis nor files to send in comments. Nothing done. Searched paths: '.$cloverFilePath.' and '.$crap4JFilePath.'.</error>');
+            $output->writeln('<comment>You might want to check that your unit tests where run successfully</comment>');
+            $output->writeln('<comment>Alternatively, maybe you did not run Clover file generation? Use "phpunit --coverage-clover clover.xml"</comment>');
+            return;
         }
 
         $gitlabApiToken = $config->getGitlabApiToken();
