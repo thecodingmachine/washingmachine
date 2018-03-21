@@ -1,6 +1,7 @@
 <?php
 namespace TheCodingMachine\WashingMachine\Gitlab;
 use Gitlab\Client;
+use Gitlab\ResultPager;
 use GuzzleHttp\Psr7\Stream;
 use GuzzleHttp\Psr7\StreamWrapper;
 use Psr\Log\LoggerInterface;
@@ -35,18 +36,33 @@ class BuildService
     public function findMergeRequestByCommitSha(string $projectName, string $commitSha) : array
     {
         // Find in the merge requests (since our build was triggered recently, it should definitely be there)
-        $mergeRequests = $this->client->merge_requests->all($projectName, [
+        /*$mergeRequests = $this->client->merge_requests->all($projectName, [
             'order_by' => 'updated_at',
             'sort' => 'desc'
+        ]);*/
+
+        $pager = new ResultPager($this->client);
+        $mergeRequests = $pager->fetch($this->client->api('merge_requests'), 'all', [
+            $projectName, [
+                'order_by' => 'updated_at',
+                'sort' => 'desc'
+            ]
         ]);
+        do {
+            $this->logger->debug('Called API, got '.count($mergeRequests).' merge requests');
+            foreach ($mergeRequests as $mergeRequest) {
+                // Let's only return this PR if the returned commit is the FIRST one (otherwise, the commit ID is on an outdated version of the PR)
 
-        foreach ($mergeRequests as $mergeRequest) {
-            // Let's only return this PR if the returned commit is the FIRST one (otherwise, the commit ID is on an outdated version of the PR)
-
-            if ($mergeRequest['sha'] === $commitSha) {
-                return $mergeRequest;
+                if ($mergeRequest['sha'] === $commitSha) {
+                    return $mergeRequest;
+                }
             }
-        }
+
+            if (!$pager->hasNext()) {
+                break;
+            }
+            $mergeRequests = $pager->fetchNext();
+        } while (true);
 
         throw new MergeRequestNotFoundException('Could not find a PR whose last commit/buildRef ID is '.$commitSha);
     }
@@ -62,7 +78,10 @@ class BuildService
     private function getPipelines(string $projectName) : array
     {
         if (!isset($this->pipelines[$projectName])) {
-            $this->pipelines[$projectName] = $this->client->projects->pipelines($projectName);
+            $pager = new ResultPager($this->client);
+            $this->pipelines[$projectName] = $pager->fetchAll($this->client->api('projects'), 'pipelines',
+                [ $projectName ]
+            );
         }
         return $this->pipelines[$projectName];
     }
