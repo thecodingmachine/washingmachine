@@ -318,8 +318,9 @@ class RunCommand extends Command
             $pipeline = $buildService->getLatestPipelineFromCommitId($projectName, $commitId, $excludePipelineId);
             $buildService->dumpArtifact($projectName, $pipeline['id'], $buildName, $jobStage, $tmpFile);
             $zipFile = new \ZipArchive();
-            if ($zipFile->open($tmpFile)!==true) {
-                throw new \RuntimeException('Invalid ZIP archive '.$tmpFile);
+            $result = $zipFile->open($tmpFile);
+            if ($result !== true) {
+                throw new \RuntimeException("An error occurred while unzipping artifact from commit $commitId. Error $result: ".$zipFile->getStatusString());
             }
             return $this->getMeasuresFromZipFile($zipFile, $cloverPath, $crap4JPath);
         } catch (\RuntimeException $e) {
