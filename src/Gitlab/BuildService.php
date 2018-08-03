@@ -179,15 +179,20 @@ class BuildService
         $jobs = $this->client->jobs->pipelineJobs($projectName, $pipelineId);
         $job = null;
         foreach ($jobs as $jobItem) {
-            if ($jobItem['name'] === $buildName && $jobItem['stage'] === $jobStage && (in_array($jobItem['status'], ['failed', 'success']))) {
+            if ($jobItem['name'] === $buildName &&
+                $jobItem['stage'] === $jobStage &&
+                isset($jobItem['artifacts_file']) &&
+                (in_array($jobItem['status'], ['failed', 'success']))
+           ) {
                 $job = $jobItem;
                 break;
             }
         }
 
         if ($job === null) {
-            throw new BuildNotFoundException('Could not find finished job with build name "'.$buildName.'" and stage "'.$jobStage.'" in pipeline "'.$pipelineId.'"');
+            throw new BuildNotFoundException('Could not find finished job with build name "'.$buildName.'", stage "'.$jobStage.'" and artifacts file in pipeline "'.$pipelineId.'"');
         }
+        $this->logger->debug('Found job '. $job['id'] . ' for pipeline ' . $pipelineId);
 
         $artifactContent = $this->client->jobs->artifacts($projectName, $job['id']);
 
