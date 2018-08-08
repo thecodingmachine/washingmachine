@@ -328,7 +328,7 @@ class RunCommand extends Command
                         throw new \RuntimeException("An error occurred while unzipping artifact from commit $commitId. Error code $result: Can't open file");
                         break;
                     case 19:
-                        throw new \RuntimeException("An error occurred while unzipping artifact from commit $commitId. Error code $result");
+                        throw new \RuntimeException("An error occurred while unzipping artifact from commit $commitId. Error code $result: Not a zip archive");
                         break;
                     default:
                         throw new \RuntimeException("An error occurred while unzipping artifact from commit $commitId. Error code $result: ".$zipFile->getStatusString());
