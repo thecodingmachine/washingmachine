@@ -320,7 +320,16 @@ class RunCommand extends Command
             $zipFile = new \ZipArchive();
             $result = $zipFile->open($tmpFile);
             if ($result !== true) {
-                throw new \RuntimeException("An error occurred while unzipping artifact from commit $commitId. Error $result: ".$zipFile->getStatusString());
+                switch ($result) {
+                    case 9:
+                        throw new \RuntimeException("An error occurred while unzipping artifact from commit $commitId. Error code $result: No such file");
+                    case 11:
+                        throw new \RuntimeException("An error occurred while unzipping artifact from commit $commitId. Error code $result: Can't open file");
+                    case 19:
+                        throw new \RuntimeException("An error occurred while unzipping artifact from commit $commitId. Error code $result: Not a zip archive");
+                    default:
+                        throw new \RuntimeException("An error occurred while unzipping artifact from commit $commitId. Error code $result: ".$zipFile->getStatusString());
+                }
             }
             return $this->getMeasuresFromZipFile($zipFile, $cloverPath, $crap4JPath);
         } catch (\RuntimeException $e) {
